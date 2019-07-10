@@ -46,7 +46,7 @@ unhandled_files = 0
 # source_dir = "D:\\unsorted ubuntu photos\\"
 # source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\"
 # source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\"
-source_dir = "E:\\ubuntu photos\\2015\\"
+source_dir = "E:\\ubuntu photos\\2014\\"
 
 print("Copying files: " + source_dir + " -> " + dest_dir)
 
@@ -188,7 +188,7 @@ for i in range(len(onlyfiles)):
         else:
             # print("Copy: " + source_dir + curr_file + " -> " + dest_file)
             shutil.copyfile(source_dir + curr_file, dest_file)
-            print(".",end='')
+            print(".",end='',flush=True)
             copied_files += 1
             # TODO once this is working, turn it into a move (os.rename (src, dest))
 
