@@ -7,8 +7,6 @@
 # or just run .py file from the containing directory
 # TODO Make this OS-independent (file naming conventions)
 
-# TODO with changes to use exif information, might need to execute using "python.exe C:\Users\colin\Desktop\sort_photos_into_folders.py"
-
 # TODO if more than one photo take on a day, create a sub-folder for that day?
 # OR option to create sub-folders for days
 
@@ -27,49 +25,6 @@ import exifread
 # regex
 import re
 
-
-# TESTING
-testfile="E:\\ubuntu photos\\2015\\P1040709.mp4" # 2014:10:26
-testfile="E:\\ubuntu photos\\2015\\P1030857.MP4" # 2013:12:18
-
-
-"""
-with open(testfile, "rb") as f:
-    bytes = f.read()[1:500000] # restrict read to start of file, just for performance reasons
-    # Translate from binary to ASCII
-    startoffile = bytes.decode("ascii",errors="ignore")
-    matchstr="Panasonic"
-    # There are 2 matches, need to find the second match
-    firstmatch = startoffile.find(matchstr)
-	# Now find the next match
-    startoffile = startoffile [firstmatch+10:]
-    secondmatch = startoffile.find(matchstr)
-	# "Date acquired" starts somewhere close to 50 chars before the match
-    # grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
-    search_string = startoffile[secondmatch-70:secondmatch-30]
-    x = re.search("[12][0-9][0-9][0-9]:[01][0-9]:[0-3][0-9]",search_string)
-    if (x):
-        # We have a match"
-        dtstring = x.group(0)
-        # dtstring = startoffile[secondmatch-51:secondmatch-40] # format is YYYY:MM:DD
-        # print("testfile " + testfile + ": date = -->" + dtstring + "<--")
-        y = int(dtstring[0:4])
-        y = int(dtstring[0:4])
-        m = int(dtstring[5:7])
-        d = int(dtstring[8:10])
-        print("Test video = " + testfile)
-        print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
-    else:
-        print ("Could not find date for file " + curr_file)	
-    f.close()
-print("Finishing binary file read")
-exit()  
-"""
-
-
-
-
-
 print("Starting copy process...")
 
 dest_dir = "D:\sorted_photos\\"
@@ -79,6 +34,9 @@ copied_files = 0
 
 # count any duplicates that weren't copied
 duplicate_files = 0
+
+# count any unhandled files
+unhandled_files = 0
 
 # TODO handle paths with folders that start with a number (eg, 180615), as preceding '\' followed by digits seems to be a way of encoding escaped characters 
 # source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\180615 OnePlus gdrive upload\\"
@@ -112,24 +70,23 @@ for i in range(len(onlyfiles)):
     m = 0
     d = 0
 	
-    print("filename = " + curr_file)
+    # print("filename = " + curr_file)
 	
     # file extension
     extension_end = curr_file.find('.') + 1
     extension = curr_file[extension_end:].upper()
-    print("Extension = " + extension)
+    # print("Extension = " + extension)
 	
-	# if curr_file.find('_') != -1:
+    # if curr_file.find('_') != -1:
     if (curr_file[:4].upper() == "IMG_" or curr_file[:4].upper() == "VID_" or curr_file[:5].upper() == "PANO_" or curr_file[:5].upper() == "TRIM_"):
-		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_")[YYYY][MM][DD]_[HHMMSS].jpg
-		# only process such fles
+        # Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_")[YYYY][MM][DD]_[HHMMSS].jpg
+        # only process such fles
         prefix_end = curr_file.find('_') + 1
-        prefix = curr_file[0:prefix_end] # TODO do we need this variable?
+        # prefix = curr_file[0:prefix_end] # Don't think we need this variable
 
         y = int(curr_file[prefix_end:prefix_end+4])
         m = int(curr_file[prefix_end+4:prefix_end+6])
         d = int(curr_file[prefix_end+6:prefix_end+8])
-	# elif (extension == "JPG" or prefix == "JPEG"):
     elif (extension == "JPG" or extension == "JPEG"):
 		# it's from another source (eg, my old Panasonic Lumix camera)
 		# For images, pull date from exif
@@ -147,8 +104,8 @@ for i in range(len(onlyfiles)):
             m = int(dtstring[5:7])
             d = int(dtstring[8:10])
         else:
-            print ("problems!")
-            # TODO handle this situation
+            print ("Can't read date information from EXIF for file: " + curr_file)
+            unhandled_files += 1
 
     elif (extension == "MP4"):
         # Logic for videos from Panasonic Lumix camera
@@ -165,14 +122,15 @@ for i in range(len(onlyfiles)):
             # Now find the next match
             startoffile = startoffile [firstmatch+10:]
             secondmatch = startoffile.find(matchstr)
+
             # "Date acquired" starts somewhere close to 50 chars before the match
             # grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
             search_string = startoffile[secondmatch-70:secondmatch-30]
             x = re.search("[12][0-9][0-9][0-9]:[01][0-9]:[0-3][0-9]",search_string)
             if (x):
-                # We have a match"
+                # We have a match
                 dtstring = x.group(0)
-                # dtstring = startoffile[secondmatch-51:secondmatch-40] # format is YYYY:MM:DD
+                # dtstring = startoffile[secondmatch-51:secondmatch-40] # format is YYYY:MM:DD... but doesn't always work, as offset can be in a different place
                 # print("testfile " + testfile + ": date = -->" + dtstring + "<--")
                 y = int(dtstring[0:4])
                 y = int(dtstring[0:4])
@@ -181,7 +139,8 @@ for i in range(len(onlyfiles)):
                 # print("Test video = " + testfile)
                 # print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
             else:
-                print ("Could not find date for file " + curr_file)	
+                print ("Could not find date for file " + curr_file)
+                unhandled_files += 1
             f.close()
 
     else:
@@ -192,13 +151,17 @@ for i in range(len(onlyfiles)):
 	# Do some basic validation: non-crazy year (eg, > 1990, less than current year), month in range 1 to 12, day in range 1 to 31 
 	# TODO future enhancemend: do completely accurate day check
     if (y < 1990 or y > current_year):
-        print("File " + curr_file + " has implausible year: " + str(y))
+        print("File " + curr_file + " has implausible creation year: " + str(y))
+        unhandled_files += 1
     elif (m < 1 or m > 12):
-        print("File " + curr_file + " has impossible month: " + str(m))
+        print("File " + curr_file + " has impossible creation month: " + str(m))
+        unhandled_files += 1
     elif (d < 1 or d > 31):
-        print("File " + curr_file + " has impossible day: " + str(d))
+        print("File " + curr_file + " has impossible creation day: " + str(d))
+        unhandled_files += 1
     else:
-		# create root folder, if needed
+        # We have acceptable year/month/day creation date for the file
+		# Create root folder, if needed
         dest_file = dest_dir
         if not(os.path.isdir(dest_file)):
             print("create root folder: " + dest_file)
@@ -220,20 +183,20 @@ for i in range(len(onlyfiles)):
 		# check if file already there
         dest_file = dest_file + curr_file
         if os.path.isfile(dest_file):
-            print("file already exists: " + dest_file)
+            print("File already exists: " + dest_file)
             duplicate_files += 1
         else:
-            print("Copy: " + source_dir + curr_file + " -> " + dest_file)
-            # shutil.copyfile(source_dir + curr_file, dest_file)
-            # print(".",end='')
+            # print("Copy: " + source_dir + curr_file + " -> " + dest_file)
+            shutil.copyfile(source_dir + curr_file, dest_file)
+            print(".",end='')
             copied_files += 1
             # TODO once this is working, turn it into a move (os.rename (src, dest))
 
 	# Testing -- break out of loop
-#    if i > 1:
-#        exit()
+    # if i > 1:
+    #     exit()
 
-print ("Finished. Total files copied = " + str(copied_files) + "; duplicates not copied = " + str(duplicate_files))
+print ("Finished. Total files copied = " + str(copied_files) + "; duplicates not copied = " + str(duplicate_files) + "; unhandled files = " + str(unhandled_files))
 
 
 
