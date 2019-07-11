@@ -27,7 +27,84 @@ import re
 
 # garbage collection
 # required because it seems that reading lots of large binary files will ultimately run out of memory
+# ... although not sure if this is working
 import gc
+
+
+# DEV 
+
+"""
+curr_file = "abcdefg.jpg"
+x = re.search("\.",curr_file)
+if (x):
+	print("found. " + x.group(0))
+	y=re.split('\.', curr_file)
+	curr_file = y[0]+"_1."+y[1]
+	print("curr_file now " + curr_file)
+else:
+	print("No .")
+exit()
+
+
+x = re.search("_[0-9].",curr_file) # limitation: will only handle the case of up to 10 duplicates!!!
+if (x):
+	# We have a match
+	print("Match: " + x.group(0))
+	new_val = (int)(x.group(0)[1:2]) + 1
+	y=re.split('_[0-9].', curr_file)
+	curr_file = y[0]+"_"+str(new_val)+"."+y[1]
+	print("curr_file now " + curr_file)
+else:
+	print("No match")
+exit()
+"""
+
+source_dir = "C:\\tmp\\"
+dest_dir = "C:\\tmp\\target\\"
+curr_file = '001.jpg' # already in target folder
+curr_file = '003.jpg' # another file with same name in target folder
+
+
+# return true if already exists, or false & (if required) changes global variable curr_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
+def already_exists ():
+	if os.path.isfile(dest_dir + curr_file):
+		curr_file_size = os.path.getsize(source_dir + curr_file)
+		target_dest_file_size = os.path.getsize(dest_dir + curr_file)
+		if (curr_file_size == target_dest_file_size):
+			# we've found duplicate
+			return True
+		else:
+			# create a new filename (append _{n}), and check again
+			x = re.search("_[0-9].",curr_file) # limitation: will only handle the case of up to 10 duplicates!!!
+			if (x):
+				# curr_file already ends _{n}.[ext], so need to increment n
+				new_val = (int)(x.group(0)[1:2]) + 1
+				y=re.split('_[0-9].', curr_file)
+				curr_file = y[0]+"_"+str(new_val)+"."+y[1]
+				print("curr_file now " + curr_file)
+			else:
+				# change end from .[ext] to _1.[ext]
+				y=re.split('\.', curr_file)
+				curr_file = y[0]+"_1."+y[1]
+			return already_exists
+		return true
+		
+if (already_exists):
+	print ("Already exists; curr_file = " + curr_file)
+else:
+	print ("Doesn't exist; curr_file = " + curr_file)
+
+exit()
+
+
+
+
+
+
+
+
+
+
 
 print("Starting copy process...")
 
