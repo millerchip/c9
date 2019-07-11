@@ -56,7 +56,7 @@ unhandled_files_array = []
 # source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\imported 16-May-2016\\"
 # TODO source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" <-- special photos, no date information
 
-source_dir = "E:\\ubuntu photos\\philippa_pictures\\2011-07-19\\"
+source_dir = "E:\\ubuntu photos\\philippa_pictures\\2011-08-13\\"
 
 
 print("Copying files: " + source_dir + " -> " + dest_dir)
@@ -240,12 +240,15 @@ for i in range(len(onlyfiles)):
 		# check if file already there
         dest_file = dest_file + curr_file
         if os.path.isfile(dest_file):
+		    # TODO add in logic to handle where the destination file is not actually the same, but there's a name clash
+			# This happens typically with images without the datetime stamp in the filename, and old .MOV files 
+			# (for the latter, it looks like each export from Philippa's camera resulted in files that were renamed 001.JPG, 002.MOV, etc)
             print("File already exists: " + dest_file)
             duplicate_files += 1
         else:
             print("Copy: " + source_dir + curr_file + " -> " + dest_file)
 			# COMMENT OUT THE LINE BELOW, TO TEST THE RESULTS WITHOUT COPYING
-            shutil.copyfile(source_dir + curr_file, dest_file)
+            # shutil.copyfile(source_dir + curr_file, dest_file)
             # print(".",end='',flush=True) # TODO looked like flush was working, but maybe not...?
             copied_files += 1
             # TODO once this is working, turn it into a move (os.rename (src, dest))
