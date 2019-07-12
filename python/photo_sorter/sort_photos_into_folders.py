@@ -31,93 +31,7 @@ import re
 import gc
 
 
-# DEV 
-
-"""
-curr_file = "abcdefg.jpg"
-x = re.search("\.",curr_file)
-if (x):
-	print("found. " + x.group(0))
-	y=re.split('\.', curr_file)
-	curr_file = y[0]+"_1."+y[1]
-	print("curr_file now " + curr_file)
-else:
-	print("No .")
-exit()
-
-
-x = re.search("_[0-9].",curr_file) # limitation: will only handle the case of up to 10 duplicates!!!
-if (x):
-	# We have a match
-	print("Match: " + x.group(0))
-	new_val = (int)(x.group(0)[1:2]) + 1
-	y=re.split('_[0-9].', curr_file)
-	curr_file = y[0]+"_"+str(new_val)+"."+y[1]
-	print("curr_file now " + curr_file)
-else:
-	print("No match")
-exit()
-"""
-
-source_dir = "C:\\tmp\\"
-dest_dir = "C:\\tmp\\target\\"
-curr_file = '001.jpg' # already in target folder
-curr_file = '003.jpg' # another file with same name in target folder
-
-
-# return true if already exists, or false & (if required) changes global variable curr_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
-def already_exists ():
-	if os.path.isfile(dest_dir + curr_file):
-		curr_file_size = os.path.getsize(source_dir + curr_file)
-		target_dest_file_size = os.path.getsize(dest_dir + curr_file)
-		if (curr_file_size == target_dest_file_size):
-			# we've found duplicate
-			return True
-		else:
-			# create a new filename (append _{n}), and check again
-			x = re.search("_[0-9].",curr_file) # limitation: will only handle the case of up to 10 duplicates!!!
-			if (x):
-				# curr_file already ends _{n}.[ext], so need to increment n
-				new_val = (int)(x.group(0)[1:2]) + 1
-				y=re.split('_[0-9].', curr_file)
-				curr_file = y[0]+"_"+str(new_val)+"."+y[1]
-				print("curr_file now " + curr_file)
-			else:
-				# change end from .[ext] to _1.[ext]
-				y=re.split('\.', curr_file)
-				curr_file = y[0]+"_1."+y[1]
-			return already_exists
-		return true
-		
-if (already_exists):
-	print ("Already exists; curr_file = " + curr_file)
-else:
-	print ("Doesn't exist; curr_file = " + curr_file)
-
-exit()
-
-
-
-
-
-
-
-
-
-
-
-print("Starting copy process...")
-
-dest_dir = "D:\\sorted_photos\\"
-
-# count all the files copied
-copied_files = 0
-
-# count any duplicates that weren't copied
-duplicate_files = 0
-
-# record any unhandled files
-unhandled_files_array = []
+# GLOBAL VARIABLES
 
 # TODO handle paths with folders that start with a number (eg, 180615), as preceding '\' followed by digits seems to be a way of encoding escaped characters 
 # source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\180615 OnePlus gdrive upload\\"
@@ -132,8 +46,94 @@ unhandled_files_array = []
 # source_dir = "E:\\ubuntu photos\\philippa_pictures\\2012-10-24\\"
 # source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\imported 16-May-2016\\"
 # TODO source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" <-- special photos, no date information
-
 source_dir = "E:\\ubuntu photos\\philippa_pictures\\2011-08-13\\"
+
+source_file = ""
+
+dest_file = ""
+dest_dir = "D:\\sorted_photos\\"
+
+
+
+# DEV WORK
+# Handle name clashes, when the files are actually different
+# only do this when there's no date/time stamp in the filename: in such situations, assume that name clash means source and destination files are the same 
+
+
+# Global variables
+source_dir = "C:\\tmp\\"
+source_file = '001.JPG' # already in target folder
+source_file = '003.JPG' # another file with same name in target folder
+
+dest_dir = "C:\\tmp\\target\\"
+dest_file = source_file
+
+# return true if already exists, or false & (if required) changes global variable dest_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
+# TODO when I integrate this into the rest of the file, I'll need to change to use the updated variable names, and keep a separate filename for both source and destination
+def already_exists ():
+	print ("\nstarting already_exists")
+	global source_dir
+	global source_file
+	global dest_dir
+	global dest_file
+	print ("start: source = -->" + source_dir + source_file + "<--")
+	print ("start: destination = -->" + dest_dir + dest_file + "<--")
+	if os.path.isfile(dest_dir + dest_file):
+		source_file_size = os.path.getsize(source_dir + source_file)
+		target_dest_file_size = os.path.getsize(dest_dir + dest_file)
+		print ("source_file_size = " + str(source_file_size) + "; target_dest_file_size = " + str(target_dest_file_size))
+		if (source_file_size == target_dest_file_size):
+			# we've found duplicate
+			return True
+		else:
+			# create a new filename (append _{n}), and check again
+			x = re.search("_[0-9].",dest_file) # limitation: will only handle the case of up to 10 duplicates!!!
+			if (x):
+				# source_file already ends _{n}.[ext], so need to increment n
+				new_val = (int)(x.group(0)[1:2]) + 1
+				y=re.split('_[0-9].', dest_file)
+				dest_file = y[0]+"_"+str(new_val)+"."+y[1]
+				print ("increment _n: source = -->" + source_dir + source_file + "<--")
+				print ("increment _n: destination = -->" + dest_dir + dest_file + "<--")
+			else:
+				# change end from .[ext] to _1.[ext]
+				y=re.split('\.', dest_file)
+				dest_file = y[0]+"_1."+y[1]
+				print ("_1: source = -->" + source_dir + source_file + "<--")
+				print ("_1: destination = -->" + dest_dir + dest_file + "<--")
+			return (already_exists())
+	else:
+		return False
+		
+if (already_exists()):
+	print ("Already exists; source_file = " + source_file + "; dest_file = " + dest_file)
+else:
+	print ("Doesn't exist; source_file = " + source_file + "; dest_file = " + dest_file)
+
+exit()
+
+
+
+
+
+
+
+
+# MAIN PROGRAM
+
+
+print("Starting copy process...")
+
+
+# count all the files copied
+copied_files = 0
+
+# count any duplicates that weren't copied
+duplicate_files = 0
+
+# record any unhandled files
+unhandled_files_array = []
+
 
 
 print("Copying files: " + source_dir + " -> " + dest_dir)
