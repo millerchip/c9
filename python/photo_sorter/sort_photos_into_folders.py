@@ -56,29 +56,14 @@ dest_file = ""
 dest_root_dir = "D:\\sorted_photos\\"
 dest_dir = ""
 
+
 """
-# find all file extensions
-
-# Recursively list all files in folder (and all sub-folders)
-graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP"]
-files = []
-# r=root, d=directories, f = files
-for r, d, f in os.walk(dest_root_dir):
-	for file in f:
-		# file extension
-		extension_end = file.find('.') + 1
-		extension = file[extension_end:].upper()
-		if (not(extension in graphics_extensions)):
-			print(d + file)
-
-exit()
-"""
-
-
 # DEV WORK
 # Recursively list all graphics files in folder (and all sub-folders)
 
 graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP", "MTS", "PEF"]
+# I've included JP_, because I've found a few such files which were (mostly) 90-degree rotations of other files. 
+# However, I've addressed all such instances to date, so hopefully no more such files will be created
 
 files = []
 # r=root, d=directories, f = files
@@ -94,7 +79,7 @@ for f in files:
 	print(f)
 
 exit()
-
+"""
 
 # return true if already exists, or false & (if required) changes global variable dest_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
 def already_exists ():
@@ -179,7 +164,7 @@ for i in range(len(onlyfiles)):
 	# print("filename = " + source_file)
 
 	# file extension
-	extension_end = source_file.find('.') + 1
+	extension_end = source_file.rfind('.') + 1
 	extension = source_file[extension_end:].upper()
 	# print("Extension = " + extension)
 
@@ -251,7 +236,7 @@ for i in range(len(onlyfiles)):
 				if (not(source_file in unhandled_files_array)):
 					unhandled_files_array.append(source_file)
 			f.close()
-			# Do garbage collection TODO this isn't working
+			# Do garbage collection TODO this isn't working, still run out of memory with v.large video files
 			gc.collect()
 
 	elif (extension == "MOV"):
@@ -286,7 +271,7 @@ for i in range(len(onlyfiles)):
 				if (not(source_file in unhandled_files_array)):
 					unhandled_files_array.append(source_file)
 			f.close()
-			# Do garbage collection TODO this isn't working
+			# Do garbage collection TODO this isn't working, still run out of memory with v.large video files
 			gc.collect()
 
 	else:
