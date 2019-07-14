@@ -76,7 +76,8 @@ for r, d, f in os.walk(dest_root_dir):
 
 for f in files:
 	# TODO process file
-	print(f)
+	dir_end = f.rfind('\\') + 1
+	print("Dir = -->" + f[0:dir_end] + "<--; filename = -->" + f[dir_end:] + "<--") 
 
 exit()
 """
