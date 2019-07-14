@@ -43,12 +43,12 @@ import gc
 # source_dir = "D:\\sorted_photos\\2019\\06_June\\"
 # source_dir = "E:\\ubuntu photos\\philippa_pictures\\2012-10-24\\"
 # source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\imported 16-May-2016\\"
-# TODO source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" <-- special photos, no date information
 # source_dir = "E:\\ubuntu photos\\philippa_pictures\\2011-08-13\\" # <-- still TODO
-
 # source_dir = "D:\\sorted_photos\\2011\\02_February\\"
-source_dir = "D:\\sorted_photos\\2018\\03_March\\"
-
+# source_dir = "D:\\sorted_photos\\2018\\03_March\\"
+# DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
+# source_dir = "E:\\ubuntu photos\\Videos to copy to home PC\\"
+source_dir = "E:\\phone photos\\all\\" 
 
 source_file = ""
 
@@ -56,24 +56,45 @@ dest_file = ""
 dest_root_dir = "D:\\sorted_photos\\"
 dest_dir = ""
 
-# For testing of name clash check logic
-# source_dir = "C:\\tmp\\"
-# dest_root_dir = "C:\\tmp\\target\\"
-
 """
+# find all file extensions
+
+# Recursively list all files in folder (and all sub-folders)
+graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP"]
+files = []
+# r=root, d=directories, f = files
+for r, d, f in os.walk(dest_root_dir):
+	for file in f:
+		# file extension
+		extension_end = file.find('.') + 1
+		extension = file[extension_end:].upper()
+		if (not(extension in graphics_extensions)):
+			print(d + file)
+
+exit()
+"""
+
+
 # DEV WORK
-# Handle name clashes, when the files are actually different
-# only do this when there's no date/time stamp in the filename: in such situations, assume that name clash means source and destination files are the same 
+# Recursively list all graphics files in folder (and all sub-folders)
 
+graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP", "MTS", "PEF"]
 
-# Global variables
-source_dir = "C:\\tmp\\"
-source_file = '001.JPG' # already in target folder
-source_file = '003.JPG' # another file with same name in target folder
+files = []
+# r=root, d=directories, f = files
+for r, d, f in os.walk(dest_root_dir):
+	for file in f:
+		extension_end = file.rfind('.') + 1
+		extension = file[extension_end:].upper()
+		if (not(extension in graphics_extensions)):
+			files.append(os.path.join(r, file))
 
-dest_root_dir = "C:\\tmp\\target\\"
-dest_file = source_file
-"""
+for f in files:
+	# TODO process file
+	print(f)
+
+exit()
+
 
 # return true if already exists, or false & (if required) changes global variable dest_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
 def already_exists ():
@@ -110,17 +131,6 @@ def already_exists ():
 			return (already_exists())
 	else:
 		return False
-
-"""		
-if (already_exists()):
-	print ("Already exists; source_file = " + source_file + "; dest_file = " + dest_file)
-else:
-	print ("Doesn't exist; source_file = " + source_file + "; dest_file = " + dest_file)
-
-exit()
-"""
-
-
 
 
 
