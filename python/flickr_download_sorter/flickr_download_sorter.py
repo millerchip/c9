@@ -29,10 +29,11 @@ graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "M
 # eg, enhanced-box-three-60_2071343962_o.jpg
 
 # Algorithm
-# Parse all the JSON files, create list of elements, each of which is a triple (id, name, date_taken)
-# Go through all image files:
+# Parse all the JSON files, create list of elements (json_data), each of which is a triple (id, name, date_taken)
+# Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
 # - find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
-# - look this id up in the array, find name and date_taken
+# Go through all photo_data:
+# - look this photo_data.id up in the json_data, find name and date_taken
 # - check for matching image in sorted photos:
 #   - identify folder that should contain the image <-- NOTE WILL NEED TO ACCOUNT OF MANUALLY RENAMED FOLDERS (IN RECENT YEARS)
 #   - if no folder, then create folder 
@@ -42,7 +43,7 @@ graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "M
 
 # Parse all the JSON files, create list of elements, each of which is a triple (id, name, date_taken)
 json_files = []
-file_data = []
+json_data = []
 # r=root, d=directories, f = files
 # First find all the date information: create an array of [id, creation_date] pairs
 for r, d, f in os.walk(flickr_photo_json_dir):
@@ -51,9 +52,7 @@ for r, d, f in os.walk(flickr_photo_json_dir):
 			# this is JSON file, with date information
 			json_files.append(os.path.join(r, file))
 
-# print(str(len(json_files)))
-
-# Show progress through the JSON files
+# Set up for showing progress as we work through the list of files
 perc = int(len(json_files)/100)
 if (perc == 0):
 	perc = 1
@@ -69,9 +68,9 @@ for f in json_files:
 		id = data['id']
 		name = data['name']
 		date_taken = data['date_taken']
-		file_data.append([id, name, date_taken])
-		# print(file_data)
-		# print(file_data[0][2]) <-- access date taken
+		json_data.append([id, name, date_taken])
+		# print(json_data)
+		# print(json_data[0][2]) <-- access date taken
 		# exit()
 		# image will be named 'name'_'id'_o.jpg (drop name to all lowercase, replace spaces with hyphens)
 		# img = str(data['name']).lower().replace(" ","_") + "_" + str(data['id']).lower() + "_o.jpg"
@@ -79,17 +78,58 @@ for f in json_files:
 	i += 1
 	if i % perc == 0:
 		print(str(int(i/perc))+"%")
+		# break
 
-# print(file_data)
-	
+print(json_data)
+
+
+# Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
+# - find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
+image_files = []
+image_data = []
+# r=root, d=directories, f = files
+# First find all the date information: create an array of [id, creation_date] pairs
+for r, d, f in os.walk(flickr_root):
+	for file in f:
+		
+		if (file[-3:] == "jpg"):
+			# this is an image file
+			image_files.append(os.path.join(r, file))
+# print (image_files)
+
+# Set up for showing progress as we work through the list of files
+perc = int(len(image_files)/100)
+if (perc == 0):
+	perc = 1
+i = 0
+print("here")
+for f in image_files:
+	# TODO process file
+	# dir_end = f.rfind('\\') + 1
+	# print("Dir = -->" + f[0:dir_end] + "<--; filename = -->" + f[dir_end:] + "<--") 
+	last_underscore = f.rfind('_') + 1
+	truncated_f = f[:last_underscore-1]
+	penultimate_underscore = truncated_f.rfind('_') + 1
+	id = truncated_f[penultimate_underscore:]
+	# print("id = " + id + "; f = " + f)
+	image_data.append([id, f])
+	i += 1
+	if i % perc == 0:
+		print(str(int(i/perc))+"%")
+		# break
+print (image_data)
+
 exit()
 
-extension_end = file.rfind('.') + 1
-extension = file[extension_end:].upper()
+for f in image_files:
+	with open(f) as image_file:
+		# TODO process image
+		print("image_file = " + str(image_file))
+		# image_data.append([id, full_path_filename])
+	i += 1
+	if i % perc == 0:
+		print(str(int(i/perc))+"%")
 
-
-if (file[extension_end:].upper() in graphics_extensions):
-	print("hi")
 
 exit()
 
