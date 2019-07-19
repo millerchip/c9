@@ -16,6 +16,51 @@ current_year = datetime.datetime.now().year
 # regex
 import re
 
+
+# DEV read in file of list of tuples
+
+
+# define an empty list
+places = []
+
+# open file and read the content in a list
+with open('E:\\json_data.txt', 'r') as filehandle:
+	for line in filehandle:
+	# remove linebreak which is the last character of the string
+		entry = line[:-1]
+		print("entry = -->" + entry + "<--")
+		# add item to the list
+		# ['2070523707', 'Enhanced Box One (8)', '2007-11-26 23:25:04']
+		# Can't get this to work...
+		# places.append(re.split(r'\[\'[^\']*\',\ \'[^\']*\',\ \'[^\']*\'\]',entry))
+		# ... so do it by hand
+		entry=entry[2:] # strip out leading ['
+
+		# id
+		match = entry.find('\'')
+		id = entry[:match]
+		entry = entry[match+4:]
+
+		# name
+		match = entry.find('\'')
+		name = entry[:match]
+		entry = entry[match+4:]
+
+		# date
+		match = entry.find('\'')
+		date = entry[:match]
+
+		print("[id, name, date] = " + id + ", " + name + ", " + date)
+		# places.append(entry)
+		places.append([id, name, date])
+
+# print(places)
+print(places[0][0])
+print(places[1][2])
+
+exit()
+
+
 flickr_root = "E:\\flickr downloads\\"
 
 flickr_photo_json_dir = flickr_root + "account data 72157705005691311_265466abac07_part1\\"
@@ -78,10 +123,14 @@ for f in json_files:
 	i += 1
 	if i % perc == 0:
 		print(str(int(i/perc))+"%")
-		# break
+		break
 
-print(json_data)
-
+# Write to file (because this creation process takes ages!)
+# with open('E:\\json_data.txt', 'w') as filehandle:
+# 	for listitem in json_data:
+# 		filehandle.write('%s\n' % listitem)
+# print(json_data)
+exit()
 
 # Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
 # - find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
