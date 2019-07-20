@@ -17,6 +17,57 @@ current_year = datetime.datetime.now().year
 import re
 
 
+# create table of all images in sorted_photos
+import sqlite3
+conn = sqlite3.connect('E:\\python_sqlite3.db')
+
+sql_create_photos_table = """ CREATE TABLE IF NOT EXISTS sorted_photos (
+										id int PRIMARY KEY,
+                                        filepath text NOT NULL,
+										name text NOT NULL
+                                    ); """
+
+if conn is not None:
+	# create projects table
+	print("create tables")
+	c = conn.cursor()
+	c.execute(sql_create_photos_table)
+	conn.commit()
+else:
+	print("Error! cannot create the database connection.")
+
+
+# Now write the full list of photos into the table
+graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP", "MTS", "PEF"]
+dest_root_dir = "D:\\sorted_photos\\"
+# r=root, d=directories, f = files
+i = 0
+for r, d, f in os.walk(dest_root_dir):
+	for file in f:
+		extension_end = file.rfind('.') + 1
+		extension = file[extension_end:].upper()
+		if (extension in graphics_extensions):
+			i += 1
+			# Take care of apostrophes in path (in theory they could be in filename too, but in practice they're not)
+			insert_statement = "INSERT INTO sorted_photos VALUES(" + str(i) + ", \"" + r.replace("\'","\\\'") + "\", \"" + file + "\")"
+			print(insert_statement)
+			c.execute(insert_statement)
+			# commit every hundred records
+			if i % 100 == 0:
+				conn.commit()
+			
+# Commit any remaining changes to database
+conn.commit()
+
+# Close DB comnection
+conn.close()
+
+print("Done")
+
+exit()
+
+#################################
+
 # Algorithm <-- OLD APPROACH: UPDATE WITH APPROACH USING SQLITE3 DATABASE
 # Parse all the JSON files, create list of elements (json_data), each of which is a triple (id, name, date_taken)
 # Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
