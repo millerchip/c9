@@ -17,63 +17,7 @@ current_year = datetime.datetime.now().year
 import re
 
 
-# DEV read in file of list of tuples
-
-
-# define an empty list
-places = []
-
-# open file and read the content in a list
-with open('E:\\json_data.txt', 'r') as filehandle:
-	for line in filehandle:
-	# remove linebreak which is the last character of the string
-		entry = line[:-1]
-		print("entry = -->" + entry + "<--")
-		# add item to the list
-		# ['2070523707', 'Enhanced Box One (8)', '2007-11-26 23:25:04']
-		# Can't get this to work...
-		# places.append(re.split(r'\[\'[^\']*\',\ \'[^\']*\',\ \'[^\']*\'\]',entry))
-		# ... so do it by hand
-		entry=entry[2:] # strip out leading ['
-
-		# id
-		match = entry.find('\'')
-		id = entry[:match]
-		entry = entry[match+4:]
-
-		# name
-		match = entry.find('\'')
-		name = entry[:match]
-		entry = entry[match+4:]
-
-		# date
-		match = entry.find('\'')
-		date = entry[:match]
-
-		print("[id, name, date] = " + id + ", " + name + ", " + date)
-		# places.append(entry)
-		places.append([id, name, date])
-
-# print(places)
-print(places[0][0])
-print(places[1][2])
-
-exit()
-
-
-flickr_root = "E:\\flickr downloads\\"
-
-flickr_photo_json_dir = flickr_root + "account data 72157705005691311_265466abac07_part1\\"
-
-# Probably don't need this, I think all files exported from flickr are .jpg
-graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP", "MTS", "PEF"]
-
-
-# "id": "2071343962" <-- file in flickr export will include this (format seems to roughly be 'name'_'id'_o.jpg, but name is processed (eg, lower case, non-alphabetic characters converted to alphabetic))
-# "name": "Enhanced Box Three (60)" <-- original filename, without extension
-# eg, enhanced-box-three-60_2071343962_o.jpg
-
-# Algorithm
+# Algorithm <-- OLD APPROACH: UPDATE WITH APPROACH USING SQLITE3 DATABASE
 # Parse all the JSON files, create list of elements (json_data), each of which is a triple (id, name, date_taken)
 # Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
 # - find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
@@ -85,10 +29,49 @@ graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "M
 #   - if no matching image in target folder, then copy into the folder. 
 #     Match might be complicated: hopefully can do a name match, but might also need to match against filesize.
 
+import sqlite3
+print("Create a database, if it's not already there")
+conn = sqlite3.connect('E:\\python_sqlite3.db')
+sql_create_json_data_table = """ CREATE TABLE IF NOT EXISTS json_data (
+                                        id text PRIMARY KEY,
+                                        filepath text NOT NULL,
+                                        date text NOT NULL
+                                    ); """
 
-# Parse all the JSON files, create list of elements, each of which is a triple (id, name, date_taken)
+sql_create_image_data_table = """ CREATE TABLE IF NOT EXISTS image_data (
+                                        id text PRIMARY KEY,
+                                        name text NOT NULL
+                                    ); """
+
+print("Create tables, if needed")
+if conn is not None:
+	# create projects table
+	print("create tables")
+	c = conn.cursor()
+	c.execute(sql_create_json_data_table)
+	c.execute(sql_create_image_data_table)
+	conn.commit()
+	# conn.close()
+else:
+	print("Error! cannot create the database connection.")
+
+# Location of all flickr exported files
+flickr_root = "E:\\flickr downloads\\"
+
+# Location for the JSON data
+flickr_photo_json_dir = flickr_root + "account data 72157705005691311_265466abac07_part1\\"
+
+# Probably don't need this, I think all files exported from flickr are .jpg
+graphics_extensions = ["JPG", "DB", "AVI", "WAV", "GIF", "JP_", "MOV", "PNG", "MP4", "JPEG", "BMP", "MTS", "PEF"]
+
+##################
+print("Parse all the JSON files, create list of elements, each of which is a triple (id, name, date_taken)")
+
+# "id": "2071343962" <-- file in flickr export will include this (format seems to roughly be 'name'_'id'_o.jpg, but name is processed (eg, lower case, non-alphabetic characters converted to alphabetic))
+# "name": "Enhanced Box Three (60)" <-- original filename, without extension
+# eg, enhanced-box-three-60_2071343962_o.jpg
+
 json_files = []
-json_data = []
 # r=root, d=directories, f = files
 # First find all the date information: create an array of [id, creation_date] pairs
 for r, d, f in os.walk(flickr_photo_json_dir):
@@ -103,6 +86,7 @@ if (perc == 0):
 	perc = 1
 i = 0
 
+print("Write data from JSON files into json_data table")
 for f in json_files:
 	# TODO process file
 	# dir_end = f.rfind('\\') + 1
@@ -113,29 +97,26 @@ for f in json_files:
 		id = data['id']
 		name = data['name']
 		date_taken = data['date_taken']
-		json_data.append([id, name, date_taken])
-		# print(json_data)
-		# print(json_data[0][2]) <-- access date taken
-		# exit()
-		# image will be named 'name'_'id'_o.jpg (drop name to all lowercase, replace spaces with hyphens)
-		# img = str(data['name']).lower().replace(" ","_") + "_" + str(data['id']).lower() + "_o.jpg"
-		# print("File (" + str(data['date_taken']) + ") " + f + ": " + img)
+		
+		insert_statement = 'INSERT INTO json_data VALUES(\'' + id + "\', \'" + name + "\', \'" + date_taken + "\')"
+		# print(insert_statement)
+		c.execute(insert_statement)
 	i += 1
 	if i % perc == 0:
 		print(str(int(i/perc))+"%")
-		break
+	# testing
+	# if i > 100:
+	# 	break
 
-# Write to file (because this creation process takes ages!)
-# with open('E:\\json_data.txt', 'w') as filehandle:
-# 	for listitem in json_data:
-# 		filehandle.write('%s\n' % listitem)
-# print(json_data)
-exit()
 
-# Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename) 
+# Now commit data to database
+conn.commit()
+
+##################
+
+print("Parse all image files, create list of elements (photo_data), each of which is a double (id, full_path_filename)")
 # - find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
 image_files = []
-image_data = []
 # r=root, d=directories, f = files
 # First find all the date information: create an array of [id, creation_date] pairs
 for r, d, f in os.walk(flickr_root):
@@ -151,7 +132,8 @@ perc = int(len(image_files)/100)
 if (perc == 0):
 	perc = 1
 i = 0
-print("here")
+
+print("Write image data into image_data table")
 for f in image_files:
 	# TODO process file
 	# dir_end = f.rfind('\\') + 1
@@ -161,12 +143,24 @@ for f in image_files:
 	penultimate_underscore = truncated_f.rfind('_') + 1
 	id = truncated_f[penultimate_underscore:]
 	# print("id = " + id + "; f = " + f)
-	image_data.append([id, f])
+	insert_statement = 'INSERT INTO image_data VALUES(\'' + id + "\', \'" + f + "\')"
+	# print(insert_statement)
+	c.execute(insert_statement)
+
 	i += 1
 	if i % perc == 0:
 		print(str(int(i/perc))+"%")
-		# break
-print (image_data)
+	# testing
+	# if i > 100:
+	# 	break
+
+# Now commit data to database
+conn.commit()
+
+# Close DB comnection
+conn.close()
+
+print("Done")
 
 exit()
 
