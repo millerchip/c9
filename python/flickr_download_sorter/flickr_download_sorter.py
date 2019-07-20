@@ -30,6 +30,19 @@ import re
 #     Match might be complicated: hopefully can do a name match, but might also need to match against filesize.
 
 import sqlite3
+
+conn = sqlite3.connect('E:\\python_sqlite3.db')
+c = conn.cursor()
+c.execute('SELECT json_data.id, json_data.filepath, json_data.date, image_data.name from json_data INNER JOIN image_data ON json_data.id = image_data.id')
+table = c.fetchall()
+for row in table:
+	# print(row)
+	print("id = " + row[0] + ", name = " + row[1] + ", date = " + row[2] + ", path = " + row[3]) # TODO order???
+#row = c.fetchone()
+#print(row)
+
+exit()
+
 print("Create a database, if it's not already there")
 conn = sqlite3.connect('E:\\python_sqlite3.db')
 sql_create_json_data_table = """ CREATE TABLE IF NOT EXISTS json_data (
