@@ -251,7 +251,7 @@ def create_image_data_table ():
 # uncomment to re-create tables; note however that these subroutines don't blank out the tables, so do that by hand (or modify the code)
 # create_sorted_photos_table()
 # create_json_data_table()
-create_image_data_table()
+# create_image_data_table()
 
 exit()
 #DEVELOPMENT WORK BELOW HERE
