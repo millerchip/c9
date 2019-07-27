@@ -62,7 +62,8 @@ def create_sorted_photos_table ():
 	sql_create_table = """ CREATE TABLE IF NOT EXISTS sorted_photos (
 											id int PRIMARY KEY,
 											filepath text NOT NULL,
-											name text NOT NULL
+											filename text NOT NULL,
+											upper_filename_no_ext NOT NULL
 										); """
 
 	# Check DB connection and cursor set up OK
@@ -84,10 +85,11 @@ def create_sorted_photos_table ():
 		for file in f:
 			extension_end = file.rfind('.') + 1
 			extension = file[extension_end:].upper()
+			filename_no_ext = file[:extension_end-1].upper()
 			if (extension in graphics_extensions):
 				i += 1
 				# Take care of apostrophes in path (in theory they could be in filename too, but in practice they're not)
-				insert_statement = "INSERT INTO sorted_photos VALUES(" + str(i) + ", \"" + r.replace("\'","\\\'") + "\", \"" + file + "\")"
+				insert_statement = "INSERT INTO sorted_photos VALUES(" + str(i) + ", \"" + r.replace("\'","\\\'") + "\", \"" + file + "\", \"" + filename_no_ext + "\")"
 				# print(insert_statement)
 				c.execute(insert_statement)
 				# commit every hundred records
@@ -153,7 +155,12 @@ def create_json_data_table ():
 			i += 1
 			data = json.load(json_file)
 			id = data['id']
-			name = data['name']
+			name = data['name'].upper()
+			# in name, replace " " with "-", remove brackets '(',')'
+			name = name.replace(" ","-")
+			name = name.replace("(","")
+			name = name.replace(")","")
+			
 			date_taken = data['date_taken']
 			
 			insert_statement = 'INSERT INTO json_data VALUES(\'' + id + "\', \'" + name + "\', \'" + date_taken + "\')"
@@ -172,13 +179,14 @@ def create_json_data_table ():
 
 
 # create table of all images in flickr_root
-def create_images_data_table ():
-	print("Start create_images_data_table")
+def create_image_data_table ():
+	print("Start create_image_data_table")
 
 	# SQL to create a table, if needed
 	sql_create_table = """ CREATE TABLE IF NOT EXISTS image_data (
 											photo_id text PRIMARY KEY,
-											path_plus_name text NOT NULL
+											path_plus_name text NOT NULL,
+											upper_filename_no_ext NOT NULL
 										); """
 
 	# Check DB connection and cursor set up OK
@@ -211,13 +219,20 @@ def create_images_data_table ():
 	i = 0
 	for f in image_files:
 		i += 1
-		# find 'id' embedded in the filename : eg, in enhanced-box-three-60_2071343962_o.jpg, id is 2071343962
-		last_underscore = f.rfind('_') + 1
-		truncated_f = f[:last_underscore-1]
-		penultimate_underscore = truncated_f.rfind('_') + 1
-		id = truncated_f[penultimate_underscore:]
-		# print("id = " + id + "; f = " + f)
-		insert_statement = 'INSERT INTO image_data VALUES(\'' + id + "\', \'" + f + "\')"
+
+		# Filename is held between the last "\", and the id (which is between the penultimate "_" to the last "_")
+		whole_filename = f[f.rfind('\\')+1:]  # eg, imgp4143_3872668712_o.jpg
+		# print("whole_filename = " + whole_filename)
+		last_underscore = whole_filename.rfind('_') + 1 
+		truncated_filename = whole_filename[:last_underscore-1] # eg, imgp4143_3872668712
+		# print("truncated_filename = " + truncated_filename)
+		penultimate_underscore = truncated_filename.rfind('_') + 1
+		id = truncated_filename[penultimate_underscore:] # eg, 3872668712
+		# print("id = " + id)
+		true_filename = truncated_filename[:penultimate_underscore-1].upper() # eg, IMGP4143
+		# print("true_filename = " + true_filename)
+		
+		insert_statement = 'INSERT INTO image_data VALUES(\'' + id + "\', \'" + f + "\', \'" + true_filename + "\')"
 		# print(insert_statement)
 		c.execute(insert_statement)
 		# commit every hundred records
@@ -228,7 +243,7 @@ def create_images_data_table ():
 	# Commit any remaining changes to database
 	conn.commit()
 
-	print("Finished create_images_data_table; total records written = " + str(i))
+	print("Finished create_image_data_table; total records written = " + str(i))
 	return None
 
 
@@ -236,9 +251,9 @@ def create_images_data_table ():
 # uncomment to re-create tables; note however that these subroutines don't blank out the tables, so do that by hand (or modify the code)
 # create_sorted_photos_table()
 # create_json_data_table()
-# create_images_data_table()
+create_image_data_table()
 
-
+exit()
 #DEVELOPMENT WORK BELOW HERE
 
 """
@@ -250,6 +265,7 @@ for row in table:
 	# print("id = " + row[0] + ", name = " + row[1] + ", date = " + row[2] + ", path = " + row[3]) # TODO order???
 """
 
+print("json_data INNER JOIN image_data")
 c.execute('SELECT json_data.photo_id, json_data.name, json_data.date, image_data.path_plus_name from json_data INNER JOIN image_data ON json_data.photo_id = image_data.photo_id')
 table = c.fetchall()
 i = 0
@@ -261,6 +277,45 @@ for row in table:
 		break
 #row = c.fetchone()
 #print(row)
+print("")
+
+exit()
+
+print("json_data")
+c.execute('SELECT * from json_data')
+table = c.fetchall()
+i = 0
+for row in table:
+	i += 1
+	print(row)
+	if i > 5:
+		break
+print("")
+
+print("sorted_photos")
+c.execute('SELECT * from sorted_photos')
+table = c.fetchall()
+i = 0
+for row in table:
+	i += 1
+	print(row)
+	# print("id = " + row[0] + ", name = " + row[1] + ", date = " + row[2] + ", path = " + row[3]) # TODO order???
+	if i > 5:
+		break
+print("")
+
+print("image_data")
+c.execute('SELECT * from image_data')
+table = c.fetchall()
+i = 0
+for row in table:
+	i += 1
+	print(row)
+	# print("id = " + row[0] + ", name = " + row[1] + ", date = " + row[2] + ", path = " + row[3]) # TODO order???
+	if i > 5:
+		break
+print("")
+
 
 
 print ("done")
