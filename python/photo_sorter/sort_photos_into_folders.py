@@ -27,6 +27,24 @@ import re
 # ... although not sure if this is working
 import gc
 
+'''
+# parse cmd-line parameters
+# example usage: .\sort_photos_into_folders.py -t 1 "E:\\DONE owl pellet\\" D:\\sorted_photos\\
+# This all works, but actually it's a faff having to add quoted and escaped file location parameters, so I'm not going to use this for now
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("source_dir", help="Source of photos to be sorted", type=str)
+parser.add_argument("dest_root_dir", help="Root directory into which photos will be sorted", type=str)
+parser.add_argument("-l", "--logging", type=int, choices=[0, 1], help="Logging level")
+parser.add_argument("-t", "--test", type=int, choices=[0, 1], help="Test mode (set to 1)")
+args = parser.parse_args()
+
+print("source_dir = -->" + args.source_dir + "<---")
+print("dest_root_dir = -->" + args.dest_root_dir + "<---")
+print("logging = "+ str(args.logging))
+print("test = "+ str(args.test))
+exit()
+'''
 
 # GLOBAL VARIABLES
 
@@ -52,20 +70,31 @@ import gc
 source_dir = "E:\\phone photos\\all\\" 
 source_dir = "E:\\DONE owl pellet\\"
 
+# if using program parameters:
+# source_dir = args.source_dir
+
 source_file = ""
 
 dest_file = ""
 
 # destination folder hierachy, into which the photos are to be sorted
 dest_root_dir = "D:\\sorted_photos\\"
+# if using program parameters:
+# dest_root_dir = args.dest_root_dir
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
 testing = 1
+# if using program parameters:
+# testing = args.test
+
 
 # Logging: extra logging, beyond the core output: 1 = additional logging, 0 = no additional logging
 # TODO consider additional logging levels
 logging = 0
+# if using program parameters:
+# logging = args.logging
+
 
 """
 # DEV WORK
