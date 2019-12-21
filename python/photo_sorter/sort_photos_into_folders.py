@@ -30,6 +30,7 @@ import gc
 
 # GLOBAL VARIABLES
 
+# folder containing the photos to be sorted
 # TODO handle paths with folders that start with a number (eg, 180615), as preceding '\' followed by digits seems to be a way of encoding escaped characters 
 # source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\180615 OnePlus gdrive upload\\"
 # source_dir = "D:\pre-Hunstanton old Lumix backup\\109_PANA\\"
@@ -49,13 +50,22 @@ import gc
 # DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "E:\\ubuntu photos\\Videos to copy to home PC\\"
 source_dir = "E:\\phone photos\\all\\" 
+source_dir = "E:\\DONE owl pellet\\"
 
 source_file = ""
 
 dest_file = ""
+
+# destination folder hierachy, into which the photos are to be sorted
 dest_root_dir = "D:\\sorted_photos\\"
 dest_dir = ""
 
+# Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
+testing = 1
+
+# Logging: extra logging, beyond the core output: 1 = additional logging, 0 = no additional logging
+# TODO consider additional logging levels
+logging = 0
 
 """
 # DEV WORK
@@ -84,17 +94,20 @@ exit()
 
 # return true if already exists, or false & (if required) changes global variable dest_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
 def already_exists ():
-	# print ("\nstarting already_exists")
+	if (logging == 1):
+		print ("\nstarting already_exists function")
 	global source_dir
 	global source_file
 	global dest_dir
 	global dest_file
-	# print ("start: source = -->" + source_dir + source_file + "<--")
-	# print ("start: destination = -->" + dest_dir + dest_file + "<--")
+	if (logging == 1):
+		print ("start: source = -->" + source_dir + source_file + "<--")
+		print ("start: destination = -->" + dest_dir + dest_file + "<--")
 	if os.path.isfile(dest_dir + dest_file):
 		source_file_size = os.path.getsize(source_dir + source_file)
 		target_dest_file_size = os.path.getsize(dest_dir + dest_file)
-		# print ("source_file_size = " + str(source_file_size) + "; target_dest_file_size = " + str(target_dest_file_size))
+		if (logging == 1):
+			print ("source_file_size = " + str(source_file_size) + "; target_dest_file_size = " + str(target_dest_file_size))
 		if (source_file_size == target_dest_file_size):
 			# we've found duplicate
 			return True
@@ -106,14 +119,16 @@ def already_exists ():
 				new_val = (int)(x.group(0)[1:2]) + 1
 				y=re.split('_[0-9].', dest_file)
 				dest_file = y[0]+"_"+str(new_val)+"."+y[1]
-				# print ("increment _n: source = -->" + source_dir + source_file + "<--")
-				# print ("increment _n: destination = -->" + dest_dir + dest_file + "<--")
+				if (logging == 1):
+					print ("increment _n: source = -->" + source_dir + source_file + "<--")
+					print ("increment _n: destination = -->" + dest_dir + dest_file + "<--")
 			else:
 				# change end from .[ext] to _1.[ext]
 				y=re.split('\.', dest_file)
 				dest_file = y[0]+"_1."+y[1]
-				# print ("_1: source = -->" + source_dir + source_file + "<--")
-				# print ("_1: destination = -->" + dest_dir + dest_file + "<--")
+				if (logging == 1):
+					print ("_1: source = -->" + source_dir + source_file + "<--")
+					print ("_1: destination = -->" + dest_dir + dest_file + "<--")
 			return (already_exists())
 	else:
 		return False
@@ -145,29 +160,32 @@ from os import listdir
 from os.path import isfile, join
 onlyfiles = [f for f in listdir(source_dir) if isfile(join(source_dir, f))]
 
-# work out what's (roughly) a 10th of the way through the list of files
+# work out what's (roughly) a 10th of the way through the list of files, for progress reporting
 perc = int(len(onlyfiles)/10)
 if (perc == 0):
 	perc = 1
 
 for i in range(len(onlyfiles)):
-	# Report progress every 10% of the way through the list of files
+	# Report progress roughly every 10% of the way through the list of files
 	if i % perc == 0:
 		print(str(int(10*i/perc))+"%")
 
 	source_file = onlyfiles[i]
 	dest_file = source_file
 
+	# variables to hold the creation year/month/day of the photos (used for creating sub-folders)
 	y = 0
 	m = 0
 	d = 0
 
-	# print("filename = " + source_file)
+	if (logging == 1):
+		print("filename = " + source_file)
 
 	# file extension
 	extension_end = source_file.rfind('.') + 1
 	extension = source_file[extension_end:].upper()
-	# print("Extension = " + extension)
+	if (logging == 1):
+		print("Extension = " + extension)
 
 	if (source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_"):
 		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_")[YYYY][MM][DD]_[HHMMSS].jpg
@@ -188,7 +206,8 @@ for i in range(len(onlyfiles)):
 
 		f = open(source_dir + source_file, 'rb')
 		tags = exifread.process_file(f)
-		# print(tags)
+		if (logging == 1):
+			print("tags = " + tags)
 		# TODO what about "Image DateTime" tag? When should I use this?
 		if "EXIF DateTimeOriginal" in tags:
 			dtstring = str(tags["EXIF DateTimeOriginal"])
@@ -226,12 +245,12 @@ for i in range(len(onlyfiles)):
 			if (x):
 				# We have a match
 				dtstring = x.group(0)
-				# print("testfile " + testfile + ": date = -->" + dtstring + "<--")
 				y = int(dtstring[0:4])
 				y = int(dtstring[0:4])
 				m = int(dtstring[5:7])
 				d = int(dtstring[8:10])
-				# print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+				if (logging == 1):
+					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
 			else:
 				print ("Could not find date for file " + source_file)
 				if (not(source_file in unhandled_files_array)):
@@ -261,12 +280,12 @@ for i in range(len(onlyfiles)):
 			if (x):
 				# We have a match
 				dtstring = x.group(0)
-				# print("testfile " + testfile + ": date = -->" + dtstring + "<--")
 				y = int(dtstring[0:4])
 				y = int(dtstring[0:4])
 				m = int(dtstring[5:7])
 				d = int(dtstring[8:10])
-				# print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+				if (logging == 1):
+					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
 			else:
 				print ("Could not find date for file " + source_file)
 				if (not(source_file in unhandled_files_array)):
@@ -282,7 +301,8 @@ for i in range(len(onlyfiles)):
 		unhandled_files_array.append(source_file)
 		# TODO in this situation, skip over the rest of the logic
 
-	# print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+	if (logging == 1):
+		print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
 
 		
 	# Do some basic validation: non-crazy year (eg, > 1990, less than current year), month in range 1 to 12, day in range 1 to 31 
@@ -328,16 +348,16 @@ for i in range(len(onlyfiles)):
 			print("File already exists: " + dest_dir + dest_file)
 			duplicate_files += 1
 		else:
-			print("Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
-			###################################################################
-			# COMMENT OUT THE LINE BELOW, TO TEST THE RESULTS WITHOUT COPYING #
-			###################################################################
-			shutil.copyfile(source_dir + source_file, dest_dir + dest_file)
-			# TODO could change copy for move, but this program is attempting to be idempotent
+			if (testing == 0):
+				# copy the file
+				print("Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
+				shutil.copyfile(source_dir + source_file, dest_dir + dest_file)
+				# TODO could change copy for move, but this program is attempting to be idempotent
+			else:
+				print("TEST MODE: Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
 			
 			# print(".",end='',flush=True) # TODO looked like flush was working, but maybe not...?
 			copied_files += 1
-		
 
 	# Testing -- break out of loop
 	# if i > 1:
