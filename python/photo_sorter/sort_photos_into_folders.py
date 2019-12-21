@@ -68,7 +68,7 @@ exit()
 # DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "E:\\ubuntu photos\\Videos to copy to home PC\\"
 source_dir = "E:\\phone photos\\all\\" 
-source_dir = "E:\\DONE owl pellet\\"
+source_dir = "D:\\colin\\Google Drive\\Photos to sort\\xperia_Z5_final_photos\\"
 
 # if using program parameters:
 # source_dir = args.source_dir
@@ -79,12 +79,13 @@ dest_file = ""
 
 # destination folder hierachy, into which the photos are to be sorted
 dest_root_dir = "D:\\sorted_photos\\"
+dest_root_dir = "D:\\colin\\Google Drive\\Photos\\"
 # if using program parameters:
 # dest_root_dir = args.dest_root_dir
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
-testing = 1
+testing = 0
 # if using program parameters:
 # testing = args.test
 
@@ -216,6 +217,14 @@ for i in range(len(onlyfiles)):
 	if (logging == 1):
 		print("Extension = " + extension)
 
+	# parsing order: 
+	# filename == [IMG_|VID_|PANO_|TRIM_]*
+	# filename == MOV_*
+	# ext == [JPG|JPEG]
+	# ext == MP4
+	# ext == MOV
+	# or can't handle the file
+
 	if (source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_"):
 		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
@@ -224,6 +233,15 @@ for i in range(len(onlyfiles)):
 		y = int(source_file[prefix_end:prefix_end+4])
 		m = int(source_file[prefix_end+4:prefix_end+6])
 		d = int(source_file[prefix_end+6:prefix_end+8])
+	elif (source_file[:4].upper() == "MOV_"):
+		# Videos from Xpedia Z5; can use the Windows file last modified date
+		dtstring = os.path.getmtime(source_dir + source_file)
+		
+		y = int(time.strftime('%Y', time.gmtime(dtstring)))
+		m = int(time.strftime('%m', time.gmtime(dtstring)))
+		d = int(time.strftime('%d', time.gmtime(dtstring)))
+		if (logging == 1):
+			print("y/m/d = " + str(y)+"/" + str(m) + "/" + str(d))
 	elif (extension == "JPG" or extension == "JPEG"):
 		# it's from another source (eg, my old Panasonic Lumix camera)
 		# For images, pull date from EXIF
