@@ -2,4 +2,3 @@
 python/platitude/twitter_credentials.py
 python/unpaywall/unpaywall_client_secret.json
 python/*/__pycache__/*
-
