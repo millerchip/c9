@@ -67,8 +67,10 @@ exit()
 # source_dir = "D:\\sorted_photos\\2018\\03_March\\"
 # DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "E:\\ubuntu photos\\Videos to copy to home PC\\"
-source_dir = "E:\\phone photos\\all\\" 
-source_dir = "D:\\colin\\Google Drive\\Photos to sort\\xperia_Z5_final_photos\\"
+# source_dir = "E:\\phone photos\\all\\" 
+# source_dir = "D:\\colin\\Google Drive\\Photos to sort\\xperia_Z5_final_photos\\"
+source_dir = "G:\\DCIM\\100_PANA\\"
+# source_dir = "G:\\DCIM\\101_PANA\\"
 
 # if using program parameters:
 # source_dir = args.source_dir
@@ -78,14 +80,14 @@ source_file = ""
 dest_file = ""
 
 # destination folder hierachy, into which the photos are to be sorted
-dest_root_dir = "D:\\sorted_photos\\"
+# dest_root_dir = "D:\\sorted_photos\\"
 dest_root_dir = "D:\\colin\\Google Drive\\Photos\\"
 # if using program parameters:
 # dest_root_dir = args.dest_root_dir
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
-testing = 0
+testing = 1
 # if using program parameters:
 # testing = args.test
 
