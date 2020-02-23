@@ -1,5 +1,5 @@
 .c9revisions/
 python/platitude/twitter_credentials.py
-python/platitude/__pycache__/*
 python/unpaywall/unpaywall_client_secret.json
-python/unpaywall/__pycache__/*
+python/*/__pycache__/*
+
