@@ -1,4 +1,5 @@
 .c9revisions/
 python/platitude/twitter_credentials.py
 python/unpaywall/unpaywall_client_secret.json
+python/valspeak_trump/twitter_credentials.py
 python/*/__pycache__/*
