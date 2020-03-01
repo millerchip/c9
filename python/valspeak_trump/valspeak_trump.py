@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 # set debug flag to True, to run the program but not actually create the tweet
-debug = False
+debug = True
 
 
 # https://stackoverflow.com/questions/3878555/how-to-replace-repeated-instances-of-a-character-with-a-single-instance-of-that
@@ -39,8 +39,7 @@ user = api.me()
 return_count = 20
 statuses = api.user_timeline(screen_name="realDonaldTrump", tweet_mode="extended", count=return_count)
 
-# TODO change 5 back to 0
-for i in range (5,return_count):
+for i in range (0,return_count):
     # iterate through all returned values
     # for key in status.keys():
     #    print (str(key) + '->' + str(status[key]))
@@ -50,10 +49,11 @@ for i in range (5,return_count):
     if tweet_length > 0:
         break
 
-# Print just the full text
+# Print the full text
 if debug:
     print("tweet = " + original_tweet)
     print("length = " + str(tweet_length))
+
 
 # Convert the tweet into valspeak, using public API at https://funtranslations.com/api/valspeak
 # Parse response from resultant JSON, and extract translation into variable 'valspeak_tweet'
@@ -64,11 +64,9 @@ if debug:
 # https://stackoverflow.com/questions/1695183/how-to-percent-encode-url-parameters-in-python
 # https://docs.python.org/3/library/urllib.html#urllib.quote
 from urllib.parse import quote
+from urllib.parse import unquote
+
 encoded_tweet = quote(original_tweet, safe='')
-
-print(encoded_tweet)
-
-# exit()
 
 # Now call the API
 # https://www.geeksforgeeks.org/get-post-requests-using-python/
@@ -77,7 +75,10 @@ print(encoded_tweet)
 import requests 
 
 # api-endpoint 
+# https://funtranslations.com/api/valspeak
 URL = "https://api.funtranslations.com/translate/valspeak.json"
+
+# I tested that the API is working, but I suspect that Trump's tweets as so grammatically challenging that the API is struggling to parse them!
 
 # defining a params dict for the parameters to be sent to the API 
 PARAMS = {'text':encoded_tweet} 
@@ -86,15 +87,17 @@ PARAMS = {'text':encoded_tweet}
 r = requests.get(url = URL, params = PARAMS) 
 
 # extracting data in json format 
-data = r.json() 
+data = r.json()
 
+print("\n")
 print(data)
+print("\n")
 
 # from https://funtranslations.com/api/valspeak, this is definitely the right field, but what I'm currently getting back from the API doesn't look like it's being parsed. However, I only get 5 API calls an hour on the free account, so will have to test slowly! :o/
 # TODO should also check data['success']['total'], which should be 1 (numeric value)
-valspeak_tweet = data['contents']['translated']
-print("\nhere\n")
-print(valspeak_tweet)
+valspeak_tweet = unquote(data['contents']['translated'])
+print("\nVALSPEAK CONVERTED\n")
+print("valspeak_tweet = " + valspeak_tweet)
 
 exit()
 
