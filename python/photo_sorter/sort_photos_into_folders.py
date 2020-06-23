@@ -50,27 +50,11 @@ exit()
 
 # folder containing the photos to be sorted
 # TODO handle paths with folders that start with a number (eg, 180615), as preceding '\' followed by digits seems to be a way of encoding escaped characters 
-# source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\180615 OnePlus gdrive upload\\"
-# source_dir = "D:\pre-Hunstanton old Lumix backup\\109_PANA\\"
-# source_dir = "G:\\DCIM\\105_PANA\\"
-# source_dir = "G:\\DCIM\\106_PANA\\"
-# source_dir = "D:\\unsorted ubuntu photos\\"
-# source_dir = "D:\colin\Google Drive\Photos to copy to home PC\\"
-# source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\"
-# source_dir = "E:\\ubuntu photos\\2014\\"
-# source_dir = "E:\\ubuntu photos\\DELETE (sorted) 2014\\"
-# source_dir = "D:\\sorted_photos\\2019\\06_June\\"
-# source_dir = "E:\\ubuntu photos\\philippa_pictures\\2012-10-24\\"
-# source_dir = "E:\\ubuntu photos\\Photos to copy to home PC\\imported 16-May-2016\\"
-# source_dir = "E:\\ubuntu photos\\philippa_pictures\\2011-08-13\\" # <-- still TODO
-# source_dir = "D:\\sorted_photos\\2011\\02_February\\"
-# source_dir = "D:\\sorted_photos\\2018\\03_March\\"
-# DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
-# source_dir = "E:\\ubuntu photos\\Videos to copy to home PC\\"
-# source_dir = "E:\\phone photos\\all\\" 
-# source_dir = "D:\\colin\\Google Drive\\Photos to sort\\xperia_Z5_final_photos\\"
-source_dir = "G:\\DCIM\\100_PANA\\"
+# TODO DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
+# source_dir = "G:\\DCIM\\100_PANA\\"
 # source_dir = "G:\\DCIM\\101_PANA\\"
+source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
+
 
 # if using program parameters:
 # source_dir = args.source_dir
@@ -220,15 +204,16 @@ for i in range(len(onlyfiles)):
 		print("Extension = " + extension)
 
 	# parsing order: 
-	# filename == [IMG_|VID_|PANO_|TRIM_]*
+	# TODO filename = YYMMDD_HHMMSS.*
+	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*
 	# filename == MOV_*
 	# ext == [JPG|JPEG]
 	# ext == MP4
 	# ext == MOV
 	# or can't handle the file
-
-	if (source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_"):
-		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_")[YYYY][MM][DD]_[HHMMSS].jpg
+	
+	if (source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_"):
+		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
 		prefix_end = source_file.find('_') + 1
 
@@ -369,6 +354,7 @@ for i in range(len(onlyfiles)):
 		if (not(source_file in unhandled_files_array)):
 			unhandled_files_array.append(source_file)
 	else:
+		# TODO make this section respect the 'testing' flag
 		# We have acceptable year/month/day creation date for the file
 		# Create root folder, if needed
 		dest_dir = dest_root_dir
