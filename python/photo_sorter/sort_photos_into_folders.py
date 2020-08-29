@@ -53,7 +53,7 @@ exit()
 # TODO DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "G:\\DCIM\\100_PANA\\"
 # source_dir = "G:\\DCIM\\101_PANA\\"
-source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
+source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
 
 
 # if using program parameters:
@@ -71,7 +71,7 @@ dest_root_dir = "D:\\colin\\Google Drive\\Photos\\"
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
-testing = 1
+testing = 0
 # if using program parameters:
 # testing = args.test
 
@@ -206,6 +206,7 @@ for i in range(len(onlyfiles)):
 	# parsing order: 
 	# TODO filename = YYMMDD_HHMMSS.*
 	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*
+	# filename == [IMG-]*
 	# filename == MOV_*
 	# ext == [JPG|JPEG]
 	# ext == MP4
@@ -216,6 +217,14 @@ for i in range(len(onlyfiles)):
 		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
 		prefix_end = source_file.find('_') + 1
+
+		y = int(source_file[prefix_end:prefix_end+4])
+		m = int(source_file[prefix_end+4:prefix_end+6])
+		d = int(source_file[prefix_end+6:prefix_end+8])
+	elif (source_file[:4].upper() == "IMG-"):
+		# WhatsApp images in format ("IMG-"[YYYY][MM][DD]-*.jpg
+		# Assumption: no need to do name collision test
+		prefix_end = source_file.find('-') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
 		m = int(source_file[prefix_end+4:prefix_end+6])
