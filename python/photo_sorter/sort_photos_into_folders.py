@@ -12,6 +12,7 @@ import shutil
 import datetime
 import time
 import sys
+import pprint
 
 from datetime import datetime as dt # don't understand why I need this, but I can't call fromtimestamp without it
 
@@ -53,7 +54,9 @@ exit()
 # TODO DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "G:\\DCIM\\100_PANA\\"
 # source_dir = "G:\\DCIM\\101_PANA\\"
-source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
+# source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
+# Note Philippa's GDrive all done
+source_dir = "D:\\colin\\Google Drive\\Photos to sort\\
 
 
 # if using program parameters:
@@ -71,7 +74,7 @@ dest_root_dir = "D:\\colin\\Google Drive\\Photos\\"
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
-testing = 0
+testing = 1
 # if using program parameters:
 # testing = args.test
 
@@ -176,6 +179,9 @@ from os import listdir
 from os.path import isfile, join
 onlyfiles = [f for f in listdir(source_dir) if isfile(join(source_dir, f))]
 
+# DEBUGGING -- explore why a particular file / set of files don't work
+# onlyfiles = ['photo (1).jpg', 'photo (2).jpg', 'photo (3).jpg', 'photo (4).jpg', 'photo (5).jpg']
+
 # work out what's (roughly) a 10th of the way through the list of files, for progress reporting
 perc = int(len(onlyfiles)/10)
 if (perc == 0):
@@ -190,12 +196,13 @@ for i in range(len(onlyfiles)):
 	dest_file = source_file
 
 	# variables to hold the creation year/month/day of the photos (used for creating sub-folders)
+	dtstring = ""
 	y = 0
 	m = 0
 	d = 0
 
 	if (logging == 1):
-		print("filename = " + source_file)
+		print("\n---------\nfilename = " + source_file)
 
 	# file extension
 	extension_end = source_file.rfind('.') + 1
@@ -206,24 +213,32 @@ for i in range(len(onlyfiles)):
 	# parsing order: 
 	# TODO filename = YYMMDD_HHMMSS.*
 	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*
-	# filename == [IMG-]*
+	# filename == IMG-*
 	# filename == MOV_*
 	# ext == [JPG|JPEG]
 	# ext == MP4
 	# ext == MOV
 	# or can't handle the file
 	
-	if (source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_"):
+	filename_might_have_date = re.search("[0-9][0-9][0,1][0-9][0-3][0-9]",source_file) # YYMMDD
+	if (logging == 1):
+		print (source_file + " -- check for date in filename: " + str(filename_might_have_date))
+	
+	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
 		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
+		if (logging == 1):
+			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*")
 		prefix_end = source_file.find('_') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
 		m = int(source_file[prefix_end+4:prefix_end+6])
 		d = int(source_file[prefix_end+6:prefix_end+8])
-	elif (source_file[:4].upper() == "IMG-"):
+	elif ((source_file[:4].upper() == "IMG-") and filename_might_have_date):
 		# WhatsApp images in format ("IMG-"[YYYY][MM][DD]-*.jpg
 		# Assumption: no need to do name collision test
+		if (logging == 1):
+			print("SCENARIO: filename == IMG-")
 		prefix_end = source_file.find('-') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
@@ -231,6 +246,8 @@ for i in range(len(onlyfiles)):
 		d = int(source_file[prefix_end+6:prefix_end+8])
 	elif (source_file[:4].upper() == "MOV_"):
 		# Videos from Xpedia Z5; can use the Windows file last modified date
+		if (logging == 1):
+			print("SCENARIO: filename == MOV_")
 		dtstring = os.path.getmtime(source_dir + source_file)
 		
 		y = int(time.strftime('%Y', time.gmtime(dtstring)))
@@ -242,6 +259,8 @@ for i in range(len(onlyfiles)):
 		# it's from another source (eg, my old Panasonic Lumix camera)
 		# For images, pull date from EXIF
 		# For video, pull "Date acquired" directly from the binary
+		if (logging == 1):
+			print("SCENARIO: ext == [JPG|JPEG]")
 
 		# ctime and mtime aren't what I need - I need Windows "Date acquired", or (better still?) pull information from image or video exif
 		# https://stackoverflow.com/questions/45221014/python-exif-cant-find-date-taken-information-but-exists-when-viewer-through-wi
@@ -249,16 +268,22 @@ for i in range(len(onlyfiles)):
 
 		f = open(source_dir + source_file, 'rb')
 		tags = exifread.process_file(f)
-		if (logging == 1):
-			print("tags = " + tags)
 		# TODO what about "Image DateTime" tag? When should I use this?
 		if "EXIF DateTimeOriginal" in tags:
 			dtstring = str(tags["EXIF DateTimeOriginal"])
+			if (logging == 1):
+				print("EXIF DateTimeOriginal: " + dtstring)
 			y = int(dtstring[0:4])
 			m = int(dtstring[5:7])
 			d = int(dtstring[8:10])
 		else:
 			print ("Can't read date information from EXIF for file: " + source_file)
+			if (logging == 1): # creates loads of output
+				# Remove JPEGThumbnail from dict (as this is enormous)
+				if ("JPEGThumbnail" in tags):
+					del tags["JPEGThumbnail"]
+				print("EXIF tags:")
+				pprint.pprint(tags)
 			if (not(source_file in unhandled_files_array)):
 				unhandled_files_array.append(source_file)
 
@@ -266,6 +291,8 @@ for i in range(len(onlyfiles)):
 		# Logic for videos from Panasonic Lumix camera
 		# After trying numerous approaches, finally got this working via direct read of the binary data
 		# Note this has only been tested for videos created with my old Panasonic Lumix camera...
+		if (logging == 1):
+			print("SCENARIO: ext == MP4")
 
 		with open(source_dir + source_file, "rb") as f:
 			bytes = f.read()[1:200000] # restrict read to start of file, just for performance reasons
@@ -304,6 +331,8 @@ for i in range(len(onlyfiles)):
 
 	elif (extension == "MOV"):
 		# Logic for videos from iPhone
+		if (logging == 1):
+			print("SCENARIO: ext == MOV")
 	
 		with open(source_dir + source_file, "rb") as f:
 			bytes = f.read()
@@ -407,16 +436,10 @@ for i in range(len(onlyfiles)):
 	# if i > 1:
 	# 	exit()
 
-print ("Finished. Total files copied = " + str(copied_files) + "; duplicates not copied = " + str(duplicate_files) + "; unhandled files = " + str(str(len(unhandled_files_array))))
+print ("\n---------\nFinished. Total files copied = " + str(copied_files) + "; duplicates not copied = " + str(duplicate_files) + "; unhandled files = " + str(str(len(unhandled_files_array))))
 if (len(unhandled_files_array)>0):
 	print("List of unhandled files:")
 	for x in (unhandled_files_array):
 		print(x)
-
-
-
-
-
-
 
 
