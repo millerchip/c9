@@ -28,6 +28,12 @@ import re
 # ... although not sure if this is working
 import gc
 
+# needed to be able to pull the "Media Created" date from .mp4 files
+import pytz
+import datetime
+import win32com
+from win32com.propsys import propsys, pscon
+
 '''
 # parse cmd-line parameters
 # example usage: .\sort_photos_into_folders.py -t 1 "E:\\DONE owl pellet\\" D:\\sorted_photos\\
@@ -250,10 +256,17 @@ for i in range(len(onlyfiles)):
 		if (logging == 1):
 			print("SCENARIO: filename == MOV_")
 		dtstring = os.path.getmtime(source_dir + source_file)
-		
-		y = int(time.strftime('%Y', time.gmtime(dtstring)))
-		m = int(time.strftime('%m', time.gmtime(dtstring)))
-		d = int(time.strftime('%d', time.gmtime(dtstring)))
+		# dtstring = os.path.getmtime(source_dir + source_file) <-- the old method, but wasn't working for files from Sony Xpedia.
+		# print(str(dt))
+		# y = int(time.strftime('%Y', time.gmtime(dtstring)))
+		# m = int(time.strftime('%m', time.gmtime(dtstring)))
+		# d = int(time.strftime('%d', time.gmtime(dtstring)))
+
+		properties = propsys.SHGetPropertyStoreFromParsingName(source_dir + source_file)
+		dtstring = str(properties.GetValue(pscon.PKEY_Media_DateEncoded).GetValue())
+		y = int(dtstring[0:4])
+		m = int(dtstring[5:7])
+		d = int(dtstring[8:10])
 		if (logging == 1):
 			print("y/m/d = " + str(y)+"/" + str(m) + "/" + str(d))
 	elif (extension == "JPG" or extension == "JPEG"):
