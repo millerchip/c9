@@ -56,7 +56,7 @@ exit()
 # source_dir = "G:\\DCIM\\101_PANA\\"
 # source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
 # Note Philippa's GDrive all done
-source_dir = "D:\\colin\\Google Drive\\Photos to sort\\
+source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
 
 
 # if using program parameters:
@@ -81,7 +81,7 @@ testing = 1
 
 # Logging: extra logging, beyond the core output: 1 = additional logging, 0 = no additional logging
 # TODO consider additional logging levels
-logging = 0
+logging = 1
 # if using program parameters:
 # logging = args.logging
 
@@ -245,7 +245,8 @@ for i in range(len(onlyfiles)):
 		m = int(source_file[prefix_end+4:prefix_end+6])
 		d = int(source_file[prefix_end+6:prefix_end+8])
 	elif (source_file[:4].upper() == "MOV_"):
-		# Videos from Xpedia Z5; can use the Windows file last modified date
+		# Videos from Xpedia Z5; can use the Windows file last modified date... 
+		# UPDATE No we can't! Need to redo this section (and work out which "MOV_*" files this works for) TODO
 		if (logging == 1):
 			print("SCENARIO: filename == MOV_")
 		dtstring = os.path.getmtime(source_dir + source_file)
@@ -374,9 +375,10 @@ for i in range(len(onlyfiles)):
 		# TODO in this situation, skip over the rest of the logic
 
 	if (logging == 1):
-		print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+		print("created date " + str(dtstring) + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))
+		# TODO dtstring isn't always in the same format (eg, for MOV_*.mp4 files from Sony Xperia), so printing isn't always working properly here
 
-		
+	
 	# Do some basic validation: non-crazy year (eg, > 1990, less than current year), month in range 1 to 12, day in range 1 to 31 
 	# TODO future enhancemend: do completely accurate day check
 	if (y < 1990 or y > current_year):
