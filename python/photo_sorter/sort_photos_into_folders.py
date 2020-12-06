@@ -255,7 +255,6 @@ for i in range(len(onlyfiles)):
 		# UPDATE No we can't! Need to redo this section (and work out which "MOV_*" files this works for) TODO
 		if (logging == 1):
 			print("SCENARIO: filename == MOV_")
-		dtstring = os.path.getmtime(source_dir + source_file)
 		# dtstring = os.path.getmtime(source_dir + source_file) <-- the old method, but wasn't working for files from Sony Xpedia.
 		# print(str(dt))
 		# y = int(time.strftime('%Y', time.gmtime(dtstring)))
