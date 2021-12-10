@@ -25,7 +25,7 @@ from twitter_credentials import *
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
-user = api.me()
+# user = api.me()
 
 # Now construct the tweet, from the RSS feed
 d = feedparser.parse("http://platitudes.home.blog/feed/")
