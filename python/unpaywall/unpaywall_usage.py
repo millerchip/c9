@@ -23,7 +23,6 @@ user_text = user_text[x+7:y]
 user_text = user_text.replace(',','')
 user_count = int(user_text)
 
-
 # now I need to write this into a google doc
 # https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
 # Service account is called "service_account"
