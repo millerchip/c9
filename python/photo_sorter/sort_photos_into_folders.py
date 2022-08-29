@@ -62,8 +62,10 @@ exit()
 # source_dir = "G:\\DCIM\\101_PANA\\"
 # source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
 # Note Philippa's GDrive all done
-source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
+# source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
+# source_dir = "G:\\My Drive\\Photos to sort\\philippa phone\\100ANDRO\\"
 
+source_dir = "G:\\My Drive\\Photos to sort\\OnePlus Nord\\"
 
 # if using program parameters:
 # source_dir = args.source_dir
@@ -74,18 +76,20 @@ dest_file = ""
 
 # destination folder hierachy, into which the photos are to be sorted
 # dest_root_dir = "D:\\sorted_photos\\"
-dest_root_dir = "D:\\colin\\Google Drive\\Photos\\"
+# dest_root_dir = "D:\\colin\\Google Drive\\Photos\\" <-- worked with Backup & Sync, but has changed with new Google drive sync system
+dest_root_dir = "G:\\My Drive\\Photos\\"
+
 # if using program parameters:
 # dest_root_dir = args.dest_root_dir
 dest_dir = ""
 
 # Testing: don't do the actual file copy: 1 = test mode, 0 = run for real
-testing = 1
+testing = 0
 # if using program parameters:
 # testing = args.test
 
 
-# Logging: extra logging, beyond the core output: 1 = additional logging, 0 = no additional logging
+# Logging: extra logging, beyond the core output: 2 = verbose logging; 1 = log copy statements only, 0 = no additional logging
 # TODO consider additional logging levels
 logging = 1
 # if using program parameters:
@@ -119,19 +123,19 @@ exit()
 
 # return true if already exists, or false & (if required) changes global variable dest_file to end in _{n}, to avoid clashing with file with the same name but a different filesize (sadly this happens often with files created via iPhone export)
 def already_exists ():
-	if (logging == 1):
+	if (logging > 1):
 		print ("\nstarting already_exists function")
 	global source_dir
 	global source_file
 	global dest_dir
 	global dest_file
-	if (logging == 1):
+	if (logging > 1):
 		print ("start: source = -->" + source_dir + source_file + "<--")
 		print ("start: destination = -->" + dest_dir + dest_file + "<--")
 	if os.path.isfile(dest_dir + dest_file):
 		source_file_size = os.path.getsize(source_dir + source_file)
 		target_dest_file_size = os.path.getsize(dest_dir + dest_file)
-		if (logging == 1):
+		if (logging > 1):
 			print ("source_file_size = " + str(source_file_size) + "; target_dest_file_size = " + str(target_dest_file_size))
 		if (source_file_size == target_dest_file_size):
 			# we've found duplicate
@@ -144,14 +148,14 @@ def already_exists ():
 				new_val = (int)(x.group(0)[1:2]) + 1
 				y=re.split('_[0-9].', dest_file)
 				dest_file = y[0]+"_"+str(new_val)+"."+y[1]
-				if (logging == 1):
+				if (logging > 1):
 					print ("increment _n: source = -->" + source_dir + source_file + "<--")
 					print ("increment _n: destination = -->" + dest_dir + dest_file + "<--")
 			else:
 				# change end from .[ext] to _1.[ext]
 				y=re.split('\.', dest_file)
 				dest_file = y[0]+"_1."+y[1]
-				if (logging == 1):
+				if (logging > 1):
 					print ("_1: source = -->" + source_dir + source_file + "<--")
 					print ("_1: destination = -->" + dest_dir + dest_file + "<--")
 			return (already_exists())
@@ -207,19 +211,19 @@ for i in range(len(onlyfiles)):
 	m = 0
 	d = 0
 
-	if (logging == 1):
+	if (logging > 1):
 		print("\n---------\nfilename = " + source_file)
 
 	# file extension
 	extension_end = source_file.rfind('.') + 1
 	extension = source_file[extension_end:].upper()
-	if (logging == 1):
+	if (logging > 1):
 		print("Extension = " + extension)
 
 	# parsing order: 
 	# TODO filename = YYMMDD_HHMMSS.*
-	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*
-	# filename == IMG-*
+	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_]*
+	# filename == [IMG-|VID-]*
 	# filename == MOV_*
 	# ext == [JPG|JPEG]
 	# ext == MP4
@@ -227,24 +231,24 @@ for i in range(len(onlyfiles)):
 	# or can't handle the file
 	
 	filename_might_have_date = re.search("[0-9][0-9][0,1][0-9][0-3][0-9]",source_file) # YYMMDD
-	if (logging == 1):
+	if (logging > 1):
 		print (source_file + " -- check for date in filename: " + str(filename_might_have_date))
 	
-	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
-		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_")[YYYY][MM][DD]_[HHMMSS].jpg
+	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_" or source_file[:11].upper() == "SCREENSHOT_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
+		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_"|"SCREENSHOT_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
-		if (logging == 1):
-			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_]*")
+		if (logging > 1):
+			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_]*")
 		prefix_end = source_file.find('_') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
 		m = int(source_file[prefix_end+4:prefix_end+6])
 		d = int(source_file[prefix_end+6:prefix_end+8])
-	elif ((source_file[:4].upper() == "IMG-") and filename_might_have_date):
+	elif ((source_file[:4].upper() == "IMG-" or source_file[:4].upper() == "VID-") and filename_might_have_date):
 		# WhatsApp images in format ("IMG-"[YYYY][MM][DD]-*.jpg
 		# Assumption: no need to do name collision test
-		if (logging == 1):
-			print("SCENARIO: filename == IMG-")
+		if (logging > 1):
+			print("SCENARIO: filename == [IMG-|VID_-]*")
 		prefix_end = source_file.find('-') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
@@ -253,7 +257,7 @@ for i in range(len(onlyfiles)):
 	elif (source_file[:4].upper() == "MOV_"):
 		# Videos from Xpedia Z5; can use the Windows file last modified date... 
 		# UPDATE No we can't! Need to redo this section (and work out which "MOV_*" files this works for) TODO
-		if (logging == 1):
+		if (logging > 1):
 			print("SCENARIO: filename == MOV_")
 		# dtstring = os.path.getmtime(source_dir + source_file) <-- the old method, but wasn't working for files from Sony Xpedia.
 		# print(str(dt))
@@ -266,13 +270,13 @@ for i in range(len(onlyfiles)):
 		y = int(dtstring[0:4])
 		m = int(dtstring[5:7])
 		d = int(dtstring[8:10])
-		if (logging == 1):
+		if (logging > 1):
 			print("y/m/d = " + str(y)+"/" + str(m) + "/" + str(d))
 	elif (extension == "JPG" or extension == "JPEG"):
 		# it's from another source (eg, my old Panasonic Lumix camera)
 		# For images, pull date from EXIF
 		# For video, pull "Date acquired" directly from the binary
-		if (logging == 1):
+		if (logging > 1):
 			print("SCENARIO: ext == [JPG|JPEG]")
 
 		# ctime and mtime aren't what I need - I need Windows "Date acquired", or (better still?) pull information from image or video exif
@@ -284,14 +288,14 @@ for i in range(len(onlyfiles)):
 		# TODO what about "Image DateTime" tag? When should I use this?
 		if "EXIF DateTimeOriginal" in tags:
 			dtstring = str(tags["EXIF DateTimeOriginal"])
-			if (logging == 1):
+			if (logging > 1):
 				print("EXIF DateTimeOriginal: " + dtstring)
 			y = int(dtstring[0:4])
 			m = int(dtstring[5:7])
 			d = int(dtstring[8:10])
 		else:
 			print ("Can't read date information from EXIF for file: " + source_file)
-			if (logging == 1): # creates loads of output
+			if (logging > 1): # creates loads of output
 				# Remove JPEGThumbnail from dict (as this is enormous)
 				if ("JPEGThumbnail" in tags):
 					del tags["JPEGThumbnail"]
@@ -304,7 +308,7 @@ for i in range(len(onlyfiles)):
 		# Logic for videos from Panasonic Lumix camera
 		# After trying numerous approaches, finally got this working via direct read of the binary data
 		# Note this has only been tested for videos created with my old Panasonic Lumix camera...
-		if (logging == 1):
+		if (logging > 1):
 			print("SCENARIO: ext == MP4")
 
 		with open(source_dir + source_file, "rb") as f:
@@ -332,7 +336,7 @@ for i in range(len(onlyfiles)):
 				y = int(dtstring[0:4])
 				m = int(dtstring[5:7])
 				d = int(dtstring[8:10])
-				if (logging == 1):
+				if (logging > 1):
 					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
 			else:
 				print ("Could not find date for file " + source_file)
@@ -344,7 +348,7 @@ for i in range(len(onlyfiles)):
 
 	elif (extension == "MOV"):
 		# Logic for videos from iPhone
-		if (logging == 1):
+		if (logging > 1):
 			print("SCENARIO: ext == MOV")
 	
 		with open(source_dir + source_file, "rb") as f:
@@ -369,7 +373,7 @@ for i in range(len(onlyfiles)):
 				y = int(dtstring[0:4])
 				m = int(dtstring[5:7])
 				d = int(dtstring[8:10])
-				if (logging == 1):
+				if (logging > 1):
 					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
 			else:
 				print ("Could not find date for file " + source_file)
@@ -386,7 +390,7 @@ for i in range(len(onlyfiles)):
 		unhandled_files_array.append(source_file)
 		# TODO in this situation, skip over the rest of the logic
 
-	if (logging == 1):
+	if (logging > 1):
 		print("created date " + str(dtstring) + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))
 		# TODO dtstring isn't always in the same format (eg, for MOV_*.mp4 files from Sony Xperia), so printing isn't always working properly here
 
@@ -437,11 +441,13 @@ for i in range(len(onlyfiles)):
 		else:
 			if (testing == 0):
 				# copy the file
-				print("Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
+				if (logging == 1):
+					print("Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
 				shutil.copyfile(source_dir + source_file, dest_dir + dest_file)
 				# TODO could change copy for move, but this program is attempting to be idempotent
 			else:
-				print("TEST MODE: Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
+				if (logging == 1):
+					print("TEST MODE: Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
 			
 			# print(".",end='',flush=True) # TODO looked like flush was working, but maybe not...?
 			copied_files += 1
