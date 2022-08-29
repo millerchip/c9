@@ -60,12 +60,10 @@ exit()
 # TODO DO MANUALLY source_dir = "E:\\ubuntu photos\\philippa_pictures\\2010-12-14\\" # <-- special photos, no date information
 # source_dir = "G:\\DCIM\\100_PANA\\"
 # source_dir = "G:\\DCIM\\101_PANA\\"
-# source_dir = "D:\\colin\\Google Drive\\Photos to sort\\OnePlus 3T subfolders\\WhatsApp images\\"
-# Note Philippa's GDrive all done
 # source_dir = "D:\\colin\\Google Drive\\Photos to sort\\"
 # source_dir = "G:\\My Drive\\Photos to sort\\philippa phone\\100ANDRO\\"
 
-source_dir = "G:\\My Drive\\Photos to sort\\OnePlus Nord\\"
+source_dir = "G:\\My Drive\\Photos to sort\\Pixel 4a\\"
 
 # if using program parameters:
 # source_dir = args.source_dir
@@ -222,7 +220,7 @@ for i in range(len(onlyfiles)):
 
 	# parsing order: 
 	# TODO filename = YYMMDD_HHMMSS.*
-	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_]*
+	# filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_PCL_]*
 	# filename == [IMG-|VID-]*
 	# filename == MOV_*
 	# ext == [JPG|JPEG]
@@ -234,11 +232,11 @@ for i in range(len(onlyfiles)):
 	if (logging > 1):
 		print (source_file + " -- check for date in filename: " + str(filename_might_have_date))
 	
-	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_" or source_file[:11].upper() == "SCREENSHOT_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
-		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_"|"SCREENSHOT_")[YYYY][MM][DD]_[HHMMSS].jpg
+	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_" or source_file[:11].upper() == "SCREENSHOT_" or source_file[:4].upper() == "PXL_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
+		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_"|"SCREENSHOT_"|"PXL_")[YYYY][MM][DD]_[HHMMSS].jpg
 		# Assumption: no need to do name collision test
 		if (logging > 1):
-			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_]*")
+			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_|PXL_]*")
 		prefix_end = source_file.find('_') + 1
 
 		y = int(source_file[prefix_end:prefix_end+4])
