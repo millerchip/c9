@@ -167,159 +167,9 @@ def already_exists ():
 	else:
 		return False
 
-def phone_filename_might_have_date():
-	# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_"|"SCREENSHOT_"|"PXL_")[YYYY][MM][DD]_[HHMMSS].jpg
-	# Assumption: no need to do name collision test
-	if (logging > 1):
-		print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_|PXL_]*")
-	prefix_end = source_file.find('_') + 1
 
-	y = int(source_file[prefix_end:prefix_end+4])
-	m = int(source_file[prefix_end+4:prefix_end+6])
-	d = int(source_file[prefix_end+6:prefix_end+8])
 
-def WhatsApp_filename_might_have_date():
-	# WhatsApp images in format ("IMG-"[YYYY][MM][DD]-*.jpg
-	# Assumption: no need to do name collision test
-	if (logging > 1):
-		print("SCENARIO: filename == [IMG-|VID_-]*")
-	prefix_end = source_file.find('-') + 1
 
-	y = int(source_file[prefix_end:prefix_end+4])
-	m = int(source_file[prefix_end+4:prefix_end+6])
-	d = int(source_file[prefix_end+6:prefix_end+8])
-
-def xpedia_video():
-	# Videos from Xpedia Z5; can use the Windows file last modified date... 
-	# UPDATE No we can't! Need to redo this section (and work out which "MOV_*" files this works for) TODO	if (logging > 1):
-	print("SCENARIO: filename == MOV_")
-	# dtstring = os.path.getmtime(source_dir + source_file) <-- the old method, but wasn't working for files from Sony Xpedia.
-	# print(str(dt))
-	# y = int(time.strftime('%Y', time.gmtime(dtstring)))
-	# m = int(time.strftime('%m', time.gmtime(dtstring)))
-	# d = int(time.strftime('%d', time.gmtime(dtstring)))
-
-	properties = propsys.SHGetPropertyStoreFromParsingName(source_dir + source_file)
-	dtstring = str(properties.GetValue(pscon.PKEY_Media_DateEncoded).GetValue())
-	y = int(dtstring[0:4])
-	m = int(dtstring[5:7])
-	d = int(dtstring[8:10])
-	if (logging > 1):
-		print("xpedia_video: y/m/d = " + str(y)+"/" + str(m) + "/" + str(d))
-
-def lumix_jpeg ():
-	# it's from another source (eg, my old Panasonic Lumix camera)
-	# For images, pull date from EXIF
-	# For video, pull "Date acquired" directly from the binary
-
-	if (logging > 1):
-		print("SCENARIO: lumix_jpeg, ext == [JPG|JPEG]")
-
-	# ctime and mtime aren't what I need - I need Windows "Date acquired", or (better still?) pull information from image or video exif
-	# https://stackoverflow.com/questions/45221014/python-exif-cant-find-date-taken-information-but-exists-when-viewer-through-wi
-	# use exifread
-
-	f = open(source_dir + source_file, 'rb')
-	tags = exifread.process_file(f)
-	# TODO what about "Image DateTime" tag? When should I use this?
-	if "EXIF DateTimeOriginal" in tags:
-		dtstring = str(tags["EXIF DateTimeOriginal"])
-		if (logging > 1):
-			print("EXIF DateTimeOriginal: " + dtstring)
-		y = int(dtstring[0:4])
-		m = int(dtstring[5:7])
-		d = int(dtstring[8:10])
-	else:
-		print ("Can't read date information from EXIF for file: " + source_file)
-		if (logging > 1): # creates loads of output
-			# Remove JPEGThumbnail from dict (as this is enormous)
-			if ("JPEGThumbnail" in tags):
-				del tags["JPEGThumbnail"]
-			print("EXIF tags:")
-			pprint.pprint(tags)
-#		if (not(source_file in unhandled_files_array)):
-#			unhandled_files_array.append(source_file)
-
-def lumix_mp4():
-	# Logic for videos from Panasonic Lumix camera
-	# After trying numerous approaches, finally got this working via direct read of the binary data
-	# Note this has only been tested for videos created with my old Panasonic Lumix camera...
-	if (logging > 1):
-		print("SCENARIO: ext == MP4")
-
-	with open(source_dir + source_file, "rb") as f:
-		bytes = f.read()[1:200000] # restrict read to start of file, just for performance reasons
-		# Translate from binary to ASCII
-		file_data = bytes.decode("ascii",errors="ignore")
-
-		# Data is a little before the second occurance of 'Panasonic'
-		# TODO experiment with just doing the same as for .MOV files
-		matchstr="Panasonic"
-		# Find the first match
-		firstmatch = file_data.find(matchstr)
-		# Now find the next match
-		file_data = file_data [firstmatch+10:]
-		secondmatch = file_data.find(matchstr)
-
-		# "Date acquired" starts somewhere close to 50 chars before the match
-		# Grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
-		search_string = file_data[secondmatch-70:secondmatch-30]
-		x = re.search("[12][0-9][0-9][0-9]:[01][0-9]:[0-3][0-9]",search_string)
-		if (x):
-			# We have a match
-			dtstring = x.group(0)
-			y = int(dtstring[0:4])
-			m = int(dtstring[5:7])
-			d = int(dtstring[8:10])
-			if (logging > 1):
-				print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
-		else:
-			print ("Could not find date for file " + source_file)
-#			if (not(source_file in unhandled_files_array)):
-#				unhandled_files_array.append(source_file)
-		f.close()
-		# Do garbage collection 
-		# TODO this isn't working, still run out of memory with v.large video files
-		gc.collect()
-
-def iphone_mov():
-	# Logic for videos from iPhone
-	if (logging > 1):
-		print("SCENARIO: ext == MOV")
-	
-	with open(source_dir + source_file, "rb") as f:
-		bytes = f.read()
-		# Translate from binary to ASCII
-		file_data = bytes.decode("ascii",errors="ignore")
-		# matchstr="Panasonic"
-		# There are 2 matches, need to find the second match
-		# firstmatch = file_data.find(matchstr)
-		# Now find the next match
-		# file_data = file_data [firstmatch+10:]
-		# secondmatch = file_data.find(matchstr)
-
-		# "Date acquired" starts somewhere close to 50 chars before the match
-		# grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
-		# search_string = file_data[secondmatch-70:secondmatch-30]
-		x = re.search("[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]",file_data)
-		if (x):
-			# We have a match
-			dtstring = x.group(0)
-			y = int(dtstring[0:4])
-			m = int(dtstring[5:7])
-			d = int(dtstring[8:10])
-			if (logging > 1):
-				print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
-		else:
-			print ("Could not find date for file " + source_file)
-#			if (not(source_file in unhandled_files_array)):
-#				unhandled_files_array.append(source_file)
-		f.close()
-		# Do garbage collection 
-		# TODO this isn't working, still run out of memory with v.large video files
-		gc.collect()
-
-	
 ################
 # MAIN PROGRAM #
 ################
@@ -348,7 +198,6 @@ onlyfiles = [f for f in listdir(source_dir) if isfile(join(source_dir, f))]
 # onlyfiles = ['photo (1).jpg', 'photo (2).jpg', 'photo (3).jpg', 'photo (4).jpg', 'photo (5).jpg']
 
 # work out what's (roughly) a 10th of the way through the list of files, for progress reporting
-# This isn't exactly accurate, but is good enough as a way of tracking progress
 perc = int(len(onlyfiles)/10)
 if (perc == 0):
 	perc = 1
@@ -391,21 +240,166 @@ for i in range(len(onlyfiles)):
 		print (source_file + " -- check for date in filename: " + str(filename_might_have_date))
 	
 	if ((source_file[:4].upper() == "IMG_" or source_file[:4].upper() == "VID_" or source_file[:5].upper() == "PANO_" or source_file[:5].upper() == "TRIM_" or source_file[:6].upper() == "MVIMG_" or source_file[:11].upper() == "SCREENSHOT_" or source_file[:4].upper() == "PXL_") and filename_might_have_date): # length check is a rough check that the filename is long enough to have YYMMDD in it
-		phone_filename_might_have_date()
-	elif ((source_file[:4].upper() == "IMG-" or source_file[:4].upper() == "VID-") and filename_might_have_date):
-		WhatsApp_filename_might_have_date()
-	elif (source_file[:4].upper() == "MOV_"):
-		xpedia_video()
-	elif (extension == "JPG" or extension == "JPEG"):
-		lumix_jpeg()
-	elif (extension == "MP4"):
-		lumix_mp4()
-	elif (extension == "MOV"):
-		iphone_mov()
+		# Photos from phone have filename in format ("IMG_"|"VID_"|"PANO_"|"TRIM_"|"MVIMG_"|"SCREENSHOT_"|"PXL_")[YYYY][MM][DD]_[HHMMSS].jpg
+		# Assumption: no need to do name collision test
+		if (logging > 1):
+			print("SCENARIO: filename == [IMG_|VID_|PANO_|TRIM_|MVIMG_|SCREENSHOT_|PXL_]*")
+		prefix_end = source_file.find('_') + 1
 
-	# If the above hasn't worked, then in all likelihood y will still equal 0
-	# One last try, looking at file mtime (if y still not set)
-	# TODO Fix this up. This is a hack to get around the fact that sometimes the data pulled from EXIF is incorrect.
+		y = int(source_file[prefix_end:prefix_end+4])
+		m = int(source_file[prefix_end+4:prefix_end+6])
+		d = int(source_file[prefix_end+6:prefix_end+8])
+	elif ((source_file[:4].upper() == "IMG-" or source_file[:4].upper() == "VID-") and filename_might_have_date):
+		# WhatsApp images in format ("IMG-"[YYYY][MM][DD]-*.jpg
+		# Assumption: no need to do name collision test
+		if (logging > 1):
+			print("SCENARIO: filename == [IMG-|VID_-]*")
+		prefix_end = source_file.find('-') + 1
+
+		y = int(source_file[prefix_end:prefix_end+4])
+		m = int(source_file[prefix_end+4:prefix_end+6])
+		d = int(source_file[prefix_end+6:prefix_end+8])
+	elif (source_file[:4].upper() == "MOV_"):
+		# Videos from Xpedia Z5; can use the Windows file last modified date... 
+		# UPDATE No we can't! Need to redo this section (and work out which "MOV_*" files this works for) TODO
+		if (logging > 1):
+			print("SCENARIO: filename == MOV_")
+		# dtstring = os.path.getmtime(source_dir + source_file) <-- the old method, but wasn't working for files from Sony Xpedia.
+		# print(str(dt))
+		# y = int(time.strftime('%Y', time.gmtime(dtstring)))
+		# m = int(time.strftime('%m', time.gmtime(dtstring)))
+		# d = int(time.strftime('%d', time.gmtime(dtstring)))
+
+		properties = propsys.SHGetPropertyStoreFromParsingName(source_dir + source_file)
+		dtstring = str(properties.GetValue(pscon.PKEY_Media_DateEncoded).GetValue())
+		y = int(dtstring[0:4])
+		m = int(dtstring[5:7])
+		d = int(dtstring[8:10])
+		if (logging > 1):
+			print("y/m/d = " + str(y)+"/" + str(m) + "/" + str(d))
+	elif (extension == "JPG" or extension == "JPEG"):
+		# it's from another source (eg, my old Panasonic Lumix camera)
+		# For images, pull date from EXIF
+		# For video, pull "Date acquired" directly from the binary
+		if (logging > 1):
+			print("SCENARIO: ext == [JPG|JPEG]")
+
+		# ctime and mtime aren't what I need - I need Windows "Date acquired", or (better still?) pull information from image or video exif
+		# https://stackoverflow.com/questions/45221014/python-exif-cant-find-date-taken-information-but-exists-when-viewer-through-wi
+		# use exifread
+
+		f = open(source_dir + source_file, 'rb')
+		tags = exifread.process_file(f)
+		# TODO what about "Image DateTime" tag? When should I use this?
+		if "EXIF DateTimeOriginal" in tags:
+			dtstring = str(tags["EXIF DateTimeOriginal"])
+			if (logging > 1):
+				print("EXIF DateTimeOriginal: " + dtstring)
+			y = int(dtstring[0:4])
+			m = int(dtstring[5:7])
+			d = int(dtstring[8:10])
+		else:
+			print ("Can't read date information from EXIF for file: " + source_file)
+			if (logging > 1): # creates loads of output
+				# Remove JPEGThumbnail from dict (as this is enormous)
+				if ("JPEGThumbnail" in tags):
+					del tags["JPEGThumbnail"]
+				print("EXIF tags:")
+				pprint.pprint(tags)
+			if (not(source_file in unhandled_files_array)):
+				unhandled_files_array.append(source_file)
+
+	elif (extension == "MP4"):
+		# Logic for videos from Panasonic Lumix camera
+		# After trying numerous approaches, finally got this working via direct read of the binary data
+		# Note this has only been tested for videos created with my old Panasonic Lumix camera...
+		if (logging > 1):
+			print("SCENARIO: ext == MP4")
+
+		with open(source_dir + source_file, "rb") as f:
+			bytes = f.read()[1:200000] # restrict read to start of file, just for performance reasons
+			# Translate from binary to ASCII
+			file_data = bytes.decode("ascii",errors="ignore")
+
+			# Data is a little before the second occurance of 'Panasonic'
+			# TODO experiment with just doing the same as for .MOV files
+			matchstr="Panasonic"
+			# Find the first match
+			firstmatch = file_data.find(matchstr)
+			# Now find the next match
+			file_data = file_data [firstmatch+10:]
+			secondmatch = file_data.find(matchstr)
+
+			# "Date acquired" starts somewhere close to 50 chars before the match
+			# Grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
+			search_string = file_data[secondmatch-70:secondmatch-30]
+			x = re.search("[12][0-9][0-9][0-9]:[01][0-9]:[0-3][0-9]",search_string)
+			if (x):
+				# We have a match
+				dtstring = x.group(0)
+				y = int(dtstring[0:4])
+				y = int(dtstring[0:4])
+				m = int(dtstring[5:7])
+				d = int(dtstring[8:10])
+				if (logging > 1):
+					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+			else:
+				print ("Could not find date for file " + source_file)
+				if (not(source_file in unhandled_files_array)):
+					unhandled_files_array.append(source_file)
+			f.close()
+			# Do garbage collection TODO this isn't working, still run out of memory with v.large video files
+			gc.collect()
+
+	elif (extension == "MOV"):
+		# Logic for videos from iPhone
+		if (logging > 1):
+			print("SCENARIO: ext == MOV")
+	
+		with open(source_dir + source_file, "rb") as f:
+			bytes = f.read()
+			# Translate from binary to ASCII
+			file_data = bytes.decode("ascii",errors="ignore")
+			# matchstr="Panasonic"
+			# There are 2 matches, need to find the second match
+			# firstmatch = file_data.find(matchstr)
+			# Now find the next match
+			# file_data = file_data [firstmatch+10:]
+			# secondmatch = file_data.find(matchstr)
+
+			# "Date acquired" starts somewhere close to 50 chars before the match
+			# grab an over-sized substring that we're confident should include the date, and then use regex to pick it out
+			# search_string = file_data[secondmatch-70:secondmatch-30]
+			x = re.search("[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]",file_data)
+			if (x):
+				# We have a match
+				dtstring = x.group(0)
+				y = int(dtstring[0:4])
+				y = int(dtstring[0:4])
+				m = int(dtstring[5:7])
+				d = int(dtstring[8:10])
+				if (logging > 1):
+					print("created date " + dtstring + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))		
+			else:
+				print ("Could not find date for file " + source_file)
+				if (not(source_file in unhandled_files_array)):
+					unhandled_files_array.append(source_file)
+			f.close()
+			# Do garbage collection TODO this isn't working, still run out of memory with v.large video files
+			gc.collect()
+
+	else:
+		# Can't handle this file
+		# TODO handle this situation, and don't drop straight into the code below (need to restructure)
+		print("Can't handle file " + source_file)
+		unhandled_files_array.append(source_file)
+		# TODO in this situation, skip over the rest of the logic
+
+	if (logging > 1):
+		print("created date " + str(dtstring) + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))
+		# TODO dtstring isn't always in the same format (eg, for MOV_*.mp4 files from Sony Xperia), so printing isn't always working properly here
+
+    # TODO Fix this up. This is a hack to get around the fact that sometimes the data pulled from EXIF is incorrect.
 	# via chatGTP, I found some code that will pull out year/month/day via getmtime (which I have used previously, but 
 	# disabled because it didn't always work)
 	if (y == 0): # ie, if we still haven't generated a year value
@@ -418,12 +412,8 @@ for i in range(len(onlyfiles)):
 		m = modification_datetime.month
 		d = modification_datetime.day
 		# Print the results
-		if (logging > 0): 
+		if (logging > 1): 
 			print(f"ChatGPT - Year: {y}, Month: {m}, Day: {d}")
-
-	if (logging > 0):
-		print("created date " + str(dtstring) + ": d,m,y = " + str(d) + "," + str(m) + "," + str(y))
-		# TODO dtstring isn't always in the same format (eg, for MOV_*.mp4 files from Sony Xperia), so printing isn't always working properly here
 
 	# Do some basic validation: non-crazy year (eg, > 1990, less than current year), month in range 1 to 12, day in range 1 to 31 
 	# TODO future enhancemend: do completely accurate day check
@@ -471,12 +461,12 @@ for i in range(len(onlyfiles)):
 		else:
 			if (testing == 0):
 				# copy the file
-				if (logging > 0):
+				if (logging > 1):
 					print("Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
 				shutil.copyfile(source_dir + source_file, dest_dir + dest_file)
 				# TODO could change copy for move, but this program is attempting to be idempotent
 			else:
-				if (logging > 0):
+				if (logging > 1):
 					print("TEST MODE: Copy: " + source_dir + source_file + " -> " + dest_dir + dest_file)
 			
 			# print(".",end='',flush=True) # TODO looked like flush was working, but maybe not...?
